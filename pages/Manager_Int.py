@@ -1,13 +1,11 @@
 import streamlit as st
+import pandas as pd
 from database import get_connection
 from backup import create_backup
 from datetime import date, timedelta
 
 
-# =====================================================
 # ACCESS CONTROL
-# =====================================================
-
 if (
     "logged_in" not in st.session_state
     or "role" not in st.session_state
@@ -26,33 +24,48 @@ manager_id = st.session_state.user_id
 st.title("Manager Dashboard")
 
 
-menu = st.sidebar.selectbox(
-    "Menu",
-    [
-        "Dashboard",
-        "Allocations",
-        "Inspections",
-        "Maintenance",
-        "Student Payments",
-        "Visitors",
-        "Vacancy",
-        "Reports",
-    ],
-)
+# EXPANDED MENU
+if "manager_menu" not in st.session_state:
+    st.session_state.manager_menu = "Dashboard"
+
+st.sidebar.header("Manager Menu")
+
+menu_items = [
+    "Dashboard",
+    "Allocations",
+    "Inspections",
+    "Maintenance",
+    "Student Payments",
+    "Visitors",
+    "Vacancy",
+    "Reports"
+]
+
+for item in menu_items:
+
+    if st.sidebar.button(
+        item,
+        use_container_width=True
+    ):
+        st.session_state.manager_menu = item
+
+menu = st.session_state.manager_menu
 
 
-# =====================================================
 # DASHBOARD
-# =====================================================
-
 if menu == "Dashboard":
+
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT COUNT(*) FROM Student")
+    cursor.execute(
+        "SELECT COUNT(*) FROM Student"
+    )
     students = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM Room")
+    cursor.execute(
+        "SELECT COUNT(*) FROM Room"
+    )
     rooms = cursor.fetchone()[0]
 
     cursor.execute(
@@ -79,41 +92,54 @@ if menu == "Dashboard":
     c1, c2, c3, c4 = st.columns(4)
 
     c1.metric("Students", students)
-
     c2.metric("Rooms", rooms)
-
-    c3.metric("Active Allocations", allocations)
-
-    c4.metric("Vacant Beds", vacant_beds)
+    c3.metric(
+        "Active Allocations",
+        allocations
+    )
+    c4.metric(
+        "Vacant Beds",
+        vacant_beds
+    )
 
     st.divider()
 
     st.subheader("Database Backup")
 
     if st.button("Backup Database"):
+
         try:
+
             filename = create_backup()
 
-            st.success(f"Backup created: {filename}")
+            st.success(
+                f"Backup created: {filename}"
+            )
 
         except Exception as e:
-            st.error(f"Backup failed: {e}")
+
+            st.error(
+                f"Backup failed: {e}"
+            )
 
 
-# =====================================================
 # ALLOCATIONS
-# =====================================================
-
 elif menu == "Allocations":
+
     st.header("Student Allocations")
 
-    action = st.radio("Action", ["Give Allocation", "Remove Allocation"])
+    action = st.radio(
+        "Action",
+        [
+            "Give Allocation",
+            "Remove Allocation"
+        ],
+        horizontal=True
+    )
 
-    # -------------------------------------------------
-    # GIVE ALLOCATION
-    # -------------------------------------------------
 
     if action == "Give Allocation":
+
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -132,15 +158,23 @@ elif menu == "Allocations":
         students = cursor.fetchall()
 
         student_options = {
-            f"{sid} - {first} {last}": (sid, gender)
-            for sid, first, last, gender in students
+            f"{sid} - {first} {last}":
+            (sid, gender)
+            for sid, first, last, gender
+            in students
         }
 
-        student_choice = st.selectbox("Student", list(student_options.keys()))
+        student_choice = st.selectbox(
+            "Student",
+            list(student_options.keys())
+        )
 
-        student_id, gender = student_options[student_choice]
+        student_id, gender = (
+            student_options[
+                student_choice
+            ]
+        )
 
-        # Correct-gender vacant beds
         cursor.execute(
             """
             SELECT
@@ -148,7 +182,6 @@ elif menu == "Allocations":
                 h.HostelName,
                 r.RoomNumber,
                 bed.BedLabel
-
             FROM Bed bed
 
             JOIN Room r
@@ -158,34 +191,52 @@ elif menu == "Allocations":
                 ON r.BlockID = b.BlockID
 
             JOIN Hostel h
-                ON b.HostelID =
-                   h.HostelID
+                ON b.HostelID = h.HostelID
 
-            WHERE
-                bed.Status = 'Vacant'
-                AND h.GenderType = ?
+            WHERE bed.Status = 'Vacant'
+              AND h.GenderType = ?
 
             ORDER BY
                 h.HostelName,
                 r.RoomNumber
             """,
-            (gender,),
+            (gender,)
         )
 
         bed_rows = cursor.fetchall()
 
         bed_options = {
-            (f"{bed_id} - {hostel}, Room {room}, Bed {label}"): bed_id
-            for bed_id, hostel, room, label in bed_rows
+            (
+                f"{bed_id} - "
+                f"{hostel}, "
+                f"Room {room}, "
+                f"Bed {label}"
+            ): bed_id
+
+            for bed_id,
+                hostel,
+                room,
+                label
+            in bed_rows
         }
 
+
         if not bed_options:
-            st.warning("No suitable vacant beds are available.")
+
+            st.warning(
+                "No suitable vacant beds are available."
+            )
 
         else:
-            bed_choice = st.selectbox("Available Bed", list(bed_options.keys()))
 
-            bed_id = bed_options[bed_choice]
+            bed_choice = st.selectbox(
+                "Available Bed",
+                list(bed_options.keys())
+            )
+
+            bed_id = (
+                bed_options[bed_choice]
+            )
 
             cursor.execute(
                 """
@@ -195,21 +246,40 @@ elif menu == "Allocations":
                 """
             )
 
-            semesters = [row[0] for row in cursor.fetchall()]
+            semesters = [
+                row[0]
+                for row
+                in cursor.fetchall()
+            ]
 
-            semester_id = st.selectbox("Semester", semesters)
-
-            start_date = st.date_input("Start Date")
-
-            end_date = st.date_input(
-                "End Date", value=(start_date + timedelta(days=90))
+            semester_id = (
+                st.selectbox(
+                    "Semester",
+                    semesters
+                )
             )
 
-            if st.button("Give Allocation"):
+            start_date = st.date_input(
+                "Start Date"
+            )
+
+            end_date = st.date_input(
+                "End Date",
+                value=(
+                    start_date
+                    + timedelta(days=90)
+                )
+            )
+
+
+            if st.button(
+                "Give Allocation"
+            ):
+
                 try:
+
                     conn.autocommit = False
 
-                    # Existing active allocation
                     cursor.execute(
                         """
                         SELECT COUNT(*)
@@ -217,15 +287,21 @@ elif menu == "Allocations":
                         WHERE StudentID = ?
                           AND Status = 'Active'
                         """,
-                        (student_id,),
+                        (student_id,)
                     )
 
-                    existing = cursor.fetchone()[0]
+                    existing = (
+                        cursor.fetchone()[0]
+                    )
 
                     if existing > 0:
-                        st.error("Student already has an active allocation.")
+
+                        st.error(
+                            "Student already has an active allocation."
+                        )
 
                     else:
+
                         cursor.execute(
                             """
                             SELECT
@@ -245,11 +321,16 @@ elif menu == "Allocations":
                             """
                         )
 
-                        number = cursor.fetchone()[0]
+                        number = (
+                            cursor.fetchone()[0]
+                        )
 
-                        allocation_id = f"A{number:05d}"
+                        allocation_id = (
+                            f"A{number:05d}"
+                        )
 
                         today = date.today()
+
 
                         cursor.execute(
                             """
@@ -277,10 +358,12 @@ elif menu == "Allocations":
                                 start_date,
                                 end_date,
                                 today,
-                                today + timedelta(days=7),
-                                today,
-                            ),
+                                today
+                                + timedelta(days=7),
+                                today
+                            )
                         )
+
 
                         cursor.execute(
                             """
@@ -288,8 +371,9 @@ elif menu == "Allocations":
                             SET Status = 'Occupied'
                             WHERE BedID = ?
                             """,
-                            (bed_id,),
+                            (bed_id,)
                         )
+
 
                         cursor.execute(
                             """
@@ -297,15 +381,17 @@ elif menu == "Allocations":
                             FROM Bed
                             WHERE BedID = ?
                             """,
-                            (bed_id,),
+                            (bed_id,)
                         )
 
-                        room_id = cursor.fetchone()[0]
+                        room_id = (
+                            cursor.fetchone()[0]
+                        )
+
 
                         cursor.execute(
                             """
                             UPDATE Room
-
                             SET CurrentOccupancy =
                             (
                                 SELECT COUNT(*)
@@ -313,29 +399,37 @@ elif menu == "Allocations":
                                 WHERE RoomID = ?
                                   AND Status = 'Occupied'
                             )
-
                             WHERE RoomID = ?
                             """,
-                            (room_id, room_id),
+                            (
+                                room_id,
+                                room_id
+                            )
                         )
+
 
                         conn.commit()
 
-                        st.success(f"Allocation {allocation_id} created.")
+                        st.success(
+                            f"Allocation {allocation_id} created."
+                        )
+
 
                 except Exception as e:
+
                     conn.rollback()
 
-                    st.error(f"Allocation failed: {e}")
+                    st.error(
+                        f"Allocation failed: {e}"
+                    )
+
 
         cursor.close()
         conn.close()
 
-    # -------------------------------------------------
-    # REMOVE ALLOCATION
-    # -------------------------------------------------
 
     else:
+
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -350,15 +444,13 @@ elif menu == "Allocations":
                     s.LastName
                 ),
                 a.BedID
-
             FROM Allocation a
 
             JOIN Student s
                 ON a.StudentID =
                    s.StudentID
 
-            WHERE
-                a.Status = 'Active'
+            WHERE a.Status = 'Active'
 
             ORDER BY
                 a.AllocationID
@@ -368,108 +460,140 @@ elif menu == "Allocations":
         rows = cursor.fetchall()
 
         options = {
-            (f"{allocation_id} - {student_id} - {name}"): (allocation_id, bed_id)
-            for allocation_id, student_id, name, bed_id in rows
+            (
+                f"{allocation_id} - "
+                f"{student_id} - "
+                f"{name}"
+            ):
+            (
+                allocation_id,
+                bed_id
+            )
+
+            for allocation_id,
+                student_id,
+                name,
+                bed_id
+            in rows
         }
 
+
         if not options:
-            st.info("No active allocations.")
+
+            st.info(
+                "No active allocations."
+            )
 
         else:
-            selected = st.selectbox("Allocation", list(options.keys()))
 
-            allocation_id, bed_id = options[selected]
+            selected = st.selectbox(
+                "Allocation",
+                list(options.keys())
+            )
 
-            if st.button("Remove Allocation"):
+            allocation_id, bed_id = (
+                options[selected]
+            )
+
+
+            if st.button(
+                "Remove Allocation"
+            ):
+
                 try:
+
                     conn.autocommit = False
 
-                    # Keep historical record
                     cursor.execute(
                         """
                         UPDATE Allocation
-
                         SET Status = 'Inactive'
-
                         WHERE AllocationID = ?
                         """,
-                        (allocation_id,),
+                        (allocation_id,)
                     )
 
                     cursor.execute(
                         """
                         UPDATE Bed
-
                         SET Status = 'Vacant'
-
                         WHERE BedID = ?
                         """,
-                        (bed_id,),
+                        (bed_id,)
                     )
 
                     cursor.execute(
                         """
                         SELECT RoomID
-
                         FROM Bed
-
                         WHERE BedID = ?
                         """,
-                        (bed_id,),
+                        (bed_id,)
                     )
 
-                    room_id = cursor.fetchone()[0]
+                    room_id = (
+                        cursor.fetchone()[0]
+                    )
 
                     cursor.execute(
                         """
                         UPDATE Room
-
                         SET CurrentOccupancy =
                         (
                             SELECT COUNT(*)
-
                             FROM Bed
-
                             WHERE RoomID = ?
-
                               AND Status =
-                              'Occupied'
+                                  'Occupied'
                         )
-
                         WHERE RoomID = ?
                         """,
-                        (room_id, room_id),
+                        (
+                            room_id,
+                            room_id
+                        )
                     )
 
                     conn.commit()
 
-                    st.success("Allocation changed to Inactive.")
+                    st.success(
+                        "Allocation changed to Inactive."
+                    )
 
                 except Exception as e:
+
                     conn.rollback()
 
-                    st.error(f"Could not remove allocation: {e}")
+                    st.error(
+                        f"Could not remove allocation: {e}"
+                    )
 
         cursor.close()
         conn.close()
 
 
-# =====================================================
 # INSPECTIONS
-# =====================================================
-
 elif menu == "Inspections":
-    st.header("Inspection Management")
+
+    st.header(
+        "Inspection Management"
+    )
 
     action = st.selectbox(
-        "Action", ["View Inspections", "Add Inspection", "Update Inspection"]
+        "Action",
+        [
+            "View Inspections",
+            "Add Inspection",
+            "Update Inspection"
+        ]
     )
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    # VIEW
+
     if action == "View Inspections":
+
         cursor.execute(
             """
             SELECT
@@ -479,18 +603,35 @@ elif menu == "Inspections":
                 Inspection_date,
                 RoomCondition,
                 Remarks
-
             FROM Inspection
-
             ORDER BY
                 Inspection_date DESC
             """
         )
 
-        st.dataframe(cursor.fetchall(), use_container_width=True)
+        rows = cursor.fetchall()
 
-    # ADD
+        df = pd.DataFrame(
+            rows,
+            columns=[
+                "Inspection ID",
+                "Room ID",
+                "Manager ID",
+                "Inspection Date",
+                "Room Condition",
+                "Remarks"
+            ]
+        )
+
+        st.dataframe(
+            df,
+            use_container_width=True,
+            hide_index=True
+        )
+
+
     elif action == "Add Inspection":
+
         cursor.execute(
             """
             SELECT RoomID
@@ -499,17 +640,41 @@ elif menu == "Inspections":
             """
         )
 
-        rooms = [row[0] for row in cursor.fetchall()]
+        rooms = [
+            row[0]
+            for row
+            in cursor.fetchall()
+        ]
 
-        room_id = st.selectbox("Room", rooms)
+        room_id = st.selectbox(
+            "Room",
+            rooms
+        )
 
-        condition = st.selectbox("Room Condition", ["Good", "Fair", "Poor"])
+        condition = st.selectbox(
+            "Room Condition",
+            [
+                "Good",
+                "Fair",
+                "Poor"
+            ]
+        )
 
-        remarks = st.text_area("Remarks")
+        remarks = st.text_area(
+            "Remarks"
+        )
 
-        inspection_date = st.date_input("Inspection Date")
+        inspection_date = (
+            st.date_input(
+                "Inspection Date"
+            )
+        )
 
-        if st.button("Add Inspection"):
+
+        if st.button(
+            "Add Inspection"
+        ):
+
             cursor.execute(
                 """
                 SELECT
@@ -529,9 +694,14 @@ elif menu == "Inspections":
                 """
             )
 
-            number = cursor.fetchone()[0]
+            number = (
+                cursor.fetchone()[0]
+            )
 
-            inspection_id = f"I{number}"
+            inspection_id = (
+                f"I{number}"
+            )
+
 
             cursor.execute(
                 """
@@ -544,7 +714,6 @@ elif menu == "Inspections":
                     RoomCondition,
                     Remarks
                 )
-
                 VALUES (?, ?, ?, ?, ?, ?)
                 """,
                 (
@@ -553,16 +722,19 @@ elif menu == "Inspections":
                     manager_id,
                     inspection_date,
                     condition,
-                    remarks,
-                ),
+                    remarks
+                )
             )
 
             conn.commit()
 
-            st.success(f"Inspection {inspection_id} added.")
+            st.success(
+                f"Inspection {inspection_id} added."
+            )
 
-    # UPDATE
+
     else:
+
         cursor.execute(
             """
             SELECT InspectionID
@@ -571,75 +743,126 @@ elif menu == "Inspections":
             """
         )
 
-        ids = [row[0] for row in cursor.fetchall()]
+        ids = [
+            row[0]
+            for row
+            in cursor.fetchall()
+        ]
 
-        inspection_id = st.selectbox("Inspection", ids)
+        inspection_id = (
+            st.selectbox(
+                "Inspection",
+                ids
+            )
+        )
 
-        condition = st.selectbox("New Condition", ["Good", "Fair", "Poor"])
+        condition = st.selectbox(
+            "New Condition",
+            [
+                "Good",
+                "Fair",
+                "Poor"
+            ]
+        )
 
-        remarks = st.text_area("Updated Remarks")
+        remarks = st.text_area(
+            "Updated Remarks"
+        )
 
-        if st.button("Update Inspection"):
+        if st.button(
+            "Update Inspection"
+        ):
+
             cursor.execute(
                 """
                 UPDATE Inspection
-
                 SET RoomCondition = ?,
                     Remarks = ?
-
                 WHERE InspectionID = ?
                 """,
-                (condition, remarks, inspection_id),
+                (
+                    condition,
+                    remarks,
+                    inspection_id
+                )
             )
 
             conn.commit()
 
-            st.success("Inspection updated.")
+            st.success(
+                "Inspection updated."
+            )
+
 
     cursor.close()
     conn.close()
 
 
-# =====================================================
 # MAINTENANCE
-# =====================================================
-
 elif menu == "Maintenance":
-    st.header("Maintenance Management")
+
+    st.header(
+        "Maintenance Management"
+    )
 
     action = st.selectbox(
-        "Action", ["View Maintenance", "Add Maintenance", "Update Maintenance"]
+        "Action",
+        [
+            "View Maintenance",
+            "Add Maintenance",
+            "Update Maintenance"
+        ]
     )
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    # VIEW
+
     if action == "View Maintenance":
+
         cursor.execute(
             """
             SELECT
-                m.MaintenanceID,
-                m.RoomID,
-                m.StudentID,
-                m.StaffID,
-                m.ManagerID,
-                m.IssueDescription,
-                m.RequestDate,
-                m.Status,
-                m.DateResolved
-
-            FROM Maintenance m
-
-            ORDER BY
-                m.RequestDate DESC
+                MaintenanceID,
+                RoomID,
+                StudentID,
+                StaffID,
+                ManagerID,
+                IssueDescription,
+                RequestDate,
+                Status,
+                DateResolved
+            FROM Maintenance
+            ORDER BY RequestDate DESC
             """
         )
 
-        st.dataframe(cursor.fetchall(), use_container_width=True)
+        rows = cursor.fetchall()
 
-    # ADD
+        df = pd.DataFrame(
+            rows,
+            columns=[
+                "Maintenance ID",
+                "Room ID",
+                "Student ID",
+                "Staff ID",
+                "Manager ID",
+                "Issue Description",
+                "Request Date",
+                "Status",
+                "Date Resolved"
+            ]
+        )
+
+        st.dataframe(
+            df,
+            use_container_width=True,
+            hide_index=True
+        )
+
+
     elif action == "Add Maintenance":
+
         cursor.execute(
             """
             SELECT RoomID
@@ -648,59 +871,92 @@ elif menu == "Maintenance":
             """
         )
 
-        rooms = [row[0] for row in cursor.fetchall()]
+        rooms = [
+            row[0]
+            for row
+            in cursor.fetchall()
+        ]
 
-        room_id = st.selectbox("Room", rooms)
+        room_id = st.selectbox(
+            "Room",
+            rooms
+        )
 
-        issue = st.text_area("Issue Description")
+        issue = st.text_area(
+            "Issue Description"
+        )
 
-        if st.button("Add Maintenance Record"):
-            cursor.execute(
-                """
-                SELECT
-                    COALESCE(
-                        MAX(
-                            CAST(
-                                SUBSTRING(
-                                    MaintenanceID,
-                                    2
-                                )
-                                AS UNSIGNED
-                            )
-                        ),
-                        0
-                    ) + 1
-                FROM Maintenance
-                """
-            )
 
-            number = cursor.fetchone()[0]
+        if st.button(
+            "Add Maintenance Record"
+        ):
 
-            maintenance_id = f"M{number}"
+            if not issue.strip():
 
-            cursor.execute(
-                """
-                INSERT INTO Maintenance
-                (
-                    MaintenanceID,
-                    RoomID,
-                    ManagerID,
-                    IssueDescription,
-                    RequestDate,
-                    Status
+                st.warning(
+                    "Please enter an issue description."
                 )
 
-                VALUES (?, ?, ?, ?, ?, 'Pending')
-                """,
-                (maintenance_id, room_id, manager_id, issue, date.today()),
-            )
+            else:
 
-            conn.commit()
+                cursor.execute(
+                    """
+                    SELECT
+                        COALESCE(
+                            MAX(
+                                CAST(
+                                    SUBSTRING(
+                                        MaintenanceID,
+                                        2
+                                    )
+                                    AS UNSIGNED
+                                )
+                            ),
+                            0
+                        ) + 1
+                    FROM Maintenance
+                    """
+                )
 
-            st.success(f"Maintenance record {maintenance_id} added.")
+                number = (
+                    cursor.fetchone()[0]
+                )
 
-    # UPDATE
+                maintenance_id = (
+                    f"M{number}"
+                )
+
+                cursor.execute(
+                    """
+                    INSERT INTO Maintenance
+                    (
+                        MaintenanceID,
+                        RoomID,
+                        ManagerID,
+                        IssueDescription,
+                        RequestDate,
+                        Status
+                    )
+                    VALUES (?, ?, ?, ?, ?, 'Pending')
+                    """,
+                    (
+                        maintenance_id,
+                        room_id,
+                        manager_id,
+                        issue,
+                        date.today()
+                    )
+                )
+
+                conn.commit()
+
+                st.success(
+                    f"Maintenance record {maintenance_id} added."
+                )
+
+
     else:
+
         cursor.execute(
             """
             SELECT MaintenanceID
@@ -709,9 +965,18 @@ elif menu == "Maintenance":
             """
         )
 
-        maintenance_ids = [row[0] for row in cursor.fetchall()]
+        maintenance_ids = [
+            row[0]
+            for row
+            in cursor.fetchall()
+        ]
 
-        maintenance_id = st.selectbox("Maintenance ID", maintenance_ids)
+        maintenance_id = (
+            st.selectbox(
+                "Maintenance ID",
+                maintenance_ids
+            )
+        )
 
         cursor.execute(
             """
@@ -722,96 +987,129 @@ elif menu == "Maintenance":
                     ' ',
                     s.Last_Name
                 )
-
             FROM Auxiliary_Staff a
-
             JOIN Staff s
                 ON a.StaffID =
                    s.StaffID
-
             WHERE
                 a.Role =
                 'Maintenance'
-
             ORDER BY
                 s.First_Name
             """
         )
 
-        maintenance_staff = cursor.fetchall()
+        maintenance_staff = (
+            cursor.fetchall()
+        )
 
         staff_options = {
-            f"{staff_id} - {name}": staff_id for staff_id, name in maintenance_staff
+            f"{staff_id} - {name}":
+            staff_id
+            for staff_id, name
+            in maintenance_staff
         }
 
-        selected_staff = st.selectbox("Maintenance Staff", list(staff_options.keys()))
+        selected_staff = (
+            st.selectbox(
+                "Maintenance Staff",
+                list(
+                    staff_options.keys()
+                )
+            )
+        )
 
-        staff_id = staff_options[selected_staff]
+        staff_id = (
+            staff_options[
+                selected_staff
+            ]
+        )
 
-        status = st.selectbox("Status", ["Pending", "Resolved", "Ok"])
+        status = st.selectbox(
+            "Status",
+            [
+                "Pending",
+                "Resolved",
+                "Ok"
+            ]
+        )
 
-        issue = st.text_area("Updated Issue Description")
+        issue = st.text_area(
+            "Updated Issue Description"
+        )
 
-        if st.button("Update Maintenance"):
-            resolved_date = None
 
-            if status == "Resolved":
-                resolved_date = date.today()
+        if st.button(
+            "Update Maintenance"
+        ):
+
+            resolved_date = (
+                date.today()
+                if status == "Resolved"
+                else None
+            )
 
             cursor.execute(
                 """
                 UPDATE Maintenance
-
                 SET StaffID = ?,
                     ManagerID = ?,
                     IssueDescription = ?,
                     Status = ?,
                     DateResolved = ?
-
                 WHERE MaintenanceID = ?
                 """,
-                (staff_id, manager_id, issue, status, resolved_date, maintenance_id),
+                (
+                    staff_id,
+                    manager_id,
+                    issue,
+                    status,
+                    resolved_date,
+                    maintenance_id
+                )
             )
 
             conn.commit()
 
-            st.success("Maintenance record updated.")
+            st.success(
+                "Maintenance record updated."
+            )
+
 
     cursor.close()
     conn.close()
 
 
-# =====================================================
 # STUDENT PAYMENTS
-# =====================================================
-
 elif menu == "Student Payments":
-    st.header("Student Payments")
+
+    st.header(
+        "Student Payments"
+    )
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    search = st.text_input("Search Student ID")
+    search = st.text_input(
+        "Search Student ID"
+    )
 
     cursor.execute(
         """
         SELECT
             p.PaymentID,
             p.StudentID,
-
             CONCAT(
                 s.FirstName,
                 ' ',
                 s.LastName
-            ) AS StudentName,
-
+            ),
             p.Amount_paid,
             p.Payment_Date,
             p.Payment_Method,
             p.Payment_Status,
             p.Balance_Due,
             p.Deadline
-
         FROM Payment p
 
         JOIN Student s
@@ -823,21 +1121,44 @@ elif menu == "Student Payments":
         ORDER BY
             p.Payment_Date DESC
         """,
-        (f"%{search}%",),
+        (
+            f"%{search}%",
+        )
     )
 
-    st.dataframe(cursor.fetchall(), use_container_width=True)
+    rows = cursor.fetchall()
+
+    df = pd.DataFrame(
+        rows,
+        columns=[
+            "Payment ID",
+            "Student ID",
+            "Student Name",
+            "Amount Paid",
+            "Payment Date",
+            "Payment Method",
+            "Payment Status",
+            "Balance Due",
+            "Deadline"
+        ]
+    )
+
+    st.dataframe(
+        df,
+        use_container_width=True,
+        hide_index=True
+    )
 
     cursor.close()
     conn.close()
 
 
-# =====================================================
 # VISITORS
-# =====================================================
-
 elif menu == "Visitors":
-    st.header("Visitor Management")
+
+    st.header(
+        "Visitor Management"
+    )
 
     action = st.selectbox(
         "Action",
@@ -846,15 +1167,16 @@ elif menu == "Visitors":
             "Add Visitor",
             "Approve / Reject Visitor",
             "Record Visit",
-            "View Visits",
-        ],
+            "View Visits"
+        ]
     )
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    # VIEW VISITORS
+
     if action == "View Visitors":
+
         cursor.execute(
             """
             SELECT
@@ -862,148 +1184,252 @@ elif menu == "Visitors":
                 VisitorName,
                 Phone,
                 ApprovalStatus
-
             FROM Visitor
-
-            ORDER BY
-                VisitorName
+            ORDER BY VisitorName
             """
         )
 
-        st.dataframe(cursor.fetchall(), use_container_width=True)
+        rows = cursor.fetchall()
 
-    # ADD VISITOR
+        df = pd.DataFrame(
+            rows,
+            columns=[
+                "Visitor ID",
+                "Visitor Name",
+                "Phone",
+                "Approval Status"
+            ]
+        )
+
+        st.dataframe(
+            df,
+            use_container_width=True,
+            hide_index=True
+        )
+
+
     elif action == "Add Visitor":
-        visitor_id = st.text_input("Visitor ID")
 
-        name = st.text_input("Visitor Name")
+        visitor_id = st.text_input(
+            "Visitor ID"
+        )
 
-        phone = st.text_input("Phone")
+        name = st.text_input(
+            "Visitor Name"
+        )
 
-        if st.button("Add Visitor"):
-            cursor.execute(
-                """
-                INSERT INTO Visitor
-                (
-                    VisitorID,
-                    VisitorName,
-                    Phone,
-                    ApprovalStatus
+        phone = st.text_input(
+            "Phone"
+        )
+
+        status = st.selectbox(
+            "Approval Status",
+            [
+                "Approved",
+                "Rejected"
+            ]
+        )
+
+
+        if st.button(
+            "Add Visitor"
+        ):
+
+            if not visitor_id or not name:
+
+                st.warning(
+                    "Visitor ID and name are required."
                 )
 
-                VALUES (?, ?, ?, 'Approved')
-                """,
-                (visitor_id, name, phone),
-            )
+            else:
 
-            conn.commit()
+                try:
 
-            st.success("Visitor added.")
+                    cursor.execute(
+                        """
+                        INSERT INTO Visitor
+                        (
+                            VisitorID,
+                            VisitorName,
+                            Phone,
+                            ApprovalStatus
+                        )
+                        VALUES (?, ?, ?, ?)
+                        """,
+                        (
+                            visitor_id,
+                            name,
+                            phone,
+                            status
+                        )
+                    )
 
-    # APPROVE / REJECT
+                    conn.commit()
+
+                    st.success(
+                        "Visitor added."
+                    )
+
+                except Exception as e:
+
+                    st.error(
+                        f"Could not add visitor: {e}"
+                    )
+
+
     elif action == "Approve / Reject Visitor":
+
         cursor.execute(
             """
             SELECT
                 VisitorID,
                 VisitorName,
                 ApprovalStatus
-
             FROM Visitor
-
-            ORDER BY
-                VisitorName
+            ORDER BY VisitorName
             """
         )
 
         visitors = cursor.fetchall()
 
         options = {
-            (f"{visitor_id} - {name} ({status})"): visitor_id
-            for visitor_id, name, status in visitors
+            (
+                f"{visitor_id} - "
+                f"{name} ({status})"
+            ):
+            visitor_id
+
+            for visitor_id,
+                name,
+                status
+            in visitors
         }
 
-        selected = st.selectbox("Visitor", list(options.keys()))
+        selected = st.selectbox(
+            "Visitor",
+            list(options.keys())
+        )
 
-        status = st.selectbox("Status", ["Approved", "Rejected"])
+        status = st.selectbox(
+            "New Status",
+            [
+                "Approved",
+                "Rejected"
+            ]
+        )
 
-        if st.button("Update Visitor"):
+
+        if st.button(
+            "Update Visitor"
+        ):
+
             cursor.execute(
                 """
                 UPDATE Visitor
-
                 SET ApprovalStatus = ?
-
                 WHERE VisitorID = ?
                 """,
-                (status, options[selected]),
+                (
+                    status,
+                    options[selected]
+                )
             )
 
             conn.commit()
 
-            st.success("Visitor status updated.")
+            st.success(
+                "Visitor status updated."
+            )
 
-    # RECORD VISIT
+
     elif action == "Record Visit":
+
         cursor.execute(
             """
             SELECT
                 VisitorID,
                 VisitorName
-
             FROM Visitor
-
             WHERE
                 ApprovalStatus =
                 'Approved'
-
             ORDER BY
                 VisitorName
             """
         )
 
-        visitor_rows = cursor.fetchall()
+        visitor_rows = (
+            cursor.fetchall()
+        )
 
-        visitor_options = {f"{vid} - {name}": vid for vid, name in visitor_rows}
+        visitor_options = {
+            f"{vid} - {name}":
+            vid
+            for vid, name
+            in visitor_rows
+        }
 
         cursor.execute(
             """
             SELECT DISTINCT
                 s.StudentID,
-
                 CONCAT(
                     s.FirstName,
                     ' ',
                     s.LastName
                 )
-
             FROM Student s
-
             JOIN Allocation a
                 ON s.StudentID =
                    a.StudentID
-
             WHERE
                 a.Status =
                 'Active'
-
             ORDER BY
                 s.StudentID
             """
         )
 
-        student_rows = cursor.fetchall()
+        student_rows = (
+            cursor.fetchall()
+        )
 
-        student_options = {f"{sid} - {name}": sid for sid, name in student_rows}
+        student_options = {
+            f"{sid} - {name}":
+            sid
+            for sid, name
+            in student_rows
+        }
 
-        if visitor_options and student_options:
-            visitor = st.selectbox("Visitor", list(visitor_options.keys()))
 
-            student = st.selectbox("Student", list(student_options.keys()))
+        if (
+            visitor_options
+            and student_options
+        ):
 
-            check_in = st.time_input("Check-in Time")
+            visitor = st.selectbox(
+                "Visitor",
+                list(
+                    visitor_options.keys()
+                )
+            )
 
-            if st.button("Record Visit"):
+            student = st.selectbox(
+                "Student",
+                list(
+                    student_options.keys()
+                )
+            )
+
+            check_in = st.time_input(
+                "Check-in Time"
+            )
+
+
+            if st.button(
+                "Record Visit"
+            ):
+
                 cursor.execute(
                     """
                     INSERT INTO Visit
@@ -1013,23 +1439,36 @@ elif menu == "Visitors":
                         CheckInTime,
                         VisitDate
                     )
-
                     VALUES (?, ?, ?, ?)
                     """,
                     (
-                        student_options[student],
-                        visitor_options[visitor],
+                        student_options[
+                            student
+                        ],
+                        visitor_options[
+                            visitor
+                        ],
                         check_in,
-                        date.today(),
-                    ),
+                        date.today()
+                    )
                 )
 
                 conn.commit()
 
-                st.success("Visit recorded.")
+                st.success(
+                    "Visit recorded."
+                )
 
-    # VIEW VISITS
+
+        else:
+
+            st.warning(
+                "An approved visitor and an actively allocated student are required."
+            )
+
+
     else:
+
         cursor.execute(
             """
             SELECT
@@ -1039,7 +1478,6 @@ elif menu == "Visitors":
                 v.VisitDate,
                 v.CheckInTime,
                 v.CheckOutTime
-
             FROM Visit v
 
             JOIN Visitor vr
@@ -1051,18 +1489,37 @@ elif menu == "Visitors":
             """
         )
 
-        st.dataframe(cursor.fetchall(), use_container_width=True)
+        rows = cursor.fetchall()
+
+        df = pd.DataFrame(
+            rows,
+            columns=[
+                "Visit ID",
+                "Visitor Name",
+                "Student ID",
+                "Visit Date",
+                "Check-In Time",
+                "Check-Out Time"
+            ]
+        )
+
+        st.dataframe(
+            df,
+            use_container_width=True,
+            hide_index=True
+        )
+
 
     cursor.close()
     conn.close()
 
 
-# =====================================================
 # VACANCY
-# =====================================================
-
 elif menu == "Vacancy":
-    st.header("Hostel Vacancy")
+
+    st.header(
+        "Hostel Vacancy"
+    )
 
     conn = get_connection()
     cursor = conn.cursor()
@@ -1071,18 +1528,14 @@ elif menu == "Vacancy":
         """
         SELECT
             h.HostelName,
-
             SUM(r.Capacity)
                 AS TotalCapacity,
-
             SUM(r.CurrentOccupancy)
                 AS Occupied,
-
             SUM(r.Capacity)
             -
             SUM(r.CurrentOccupancy)
                 AS Vacancies
-
         FROM Hostel h
 
         JOIN Block b
@@ -1102,17 +1555,31 @@ elif menu == "Vacancy":
         """
     )
 
-    st.dataframe(cursor.fetchall(), use_container_width=True)
+    rows = cursor.fetchall()
+
+    df = pd.DataFrame(
+        rows,
+        columns=[
+            "Hostel Name",
+            "Total Capacity",
+            "Occupied",
+            "Vacancies"
+        ]
+    )
+
+    st.dataframe(
+        df,
+        use_container_width=True,
+        hide_index=True
+    )
 
     cursor.close()
     conn.close()
 
 
-# =====================================================
 # REPORTS
-# =====================================================
-
 elif menu == "Reports":
+
     st.header("Reports")
 
     report = st.selectbox(
@@ -1121,23 +1588,22 @@ elif menu == "Reports":
             "Hostel Occupancy",
             "Hostel Vacancy",
             "Outstanding Payments",
-            "Active Allocations",
-        ],
+            "Active Allocations"
+        ]
     )
 
     conn = get_connection()
     cursor = conn.cursor()
 
+
     if report == "Hostel Occupancy":
+
         cursor.execute(
             """
             SELECT
                 h.HostelName,
-                SUM(r.Capacity)
-                    AS Capacity,
-                SUM(r.CurrentOccupancy)
-                    AS Occupied,
-
+                SUM(r.Capacity),
+                SUM(r.CurrentOccupancy),
                 ROUND(
                     SUM(
                         r.CurrentOccupancy
@@ -1150,8 +1616,6 @@ elif menu == "Reports":
                     * 100,
                     2
                 )
-                    AS OccupancyRate
-
             FROM Hostel h
 
             JOIN Block b
@@ -1167,27 +1631,34 @@ elif menu == "Reports":
                 h.HostelName
 
             ORDER BY
-                OccupancyRate DESC
+                4 DESC
             """
         )
 
+        rows = cursor.fetchall()
+
+        df = pd.DataFrame(
+            rows,
+            columns=[
+                "Hostel Name",
+                "Capacity",
+                "Occupied",
+                "Occupancy Rate (%)"
+            ]
+        )
+
+
     elif report == "Hostel Vacancy":
+
         cursor.execute(
             """
             SELECT
                 h.HostelName,
-
-                SUM(r.Capacity)
-                    AS Capacity,
-
-                SUM(r.CurrentOccupancy)
-                    AS Occupied,
-
+                SUM(r.Capacity),
+                SUM(r.CurrentOccupancy),
                 SUM(r.Capacity)
                 -
                 SUM(r.CurrentOccupancy)
-                    AS Vacancies
-
             FROM Hostel h
 
             JOIN Block b
@@ -1203,25 +1674,36 @@ elif menu == "Reports":
                 h.HostelName
 
             ORDER BY
-                Vacancies DESC
+                4 DESC
             """
         )
 
+        rows = cursor.fetchall()
+
+        df = pd.DataFrame(
+            rows,
+            columns=[
+                "Hostel Name",
+                "Capacity",
+                "Occupied",
+                "Vacancies"
+            ]
+        )
+
+
     elif report == "Outstanding Payments":
+
         cursor.execute(
             """
             SELECT
                 p.StudentID,
-
                 CONCAT(
                     s.FirstName,
                     ' ',
                     s.LastName
                 ),
-
                 p.Balance_Due,
                 p.Deadline
-
             FROM Payment p
 
             JOIN Student s
@@ -1236,23 +1718,34 @@ elif menu == "Reports":
             """
         )
 
+        rows = cursor.fetchall()
+
+        df = pd.DataFrame(
+            rows,
+            columns=[
+                "Student ID",
+                "Student Name",
+                "Balance Due",
+                "Deadline"
+            ]
+        )
+
+
     else:
+
         cursor.execute(
             """
             SELECT
                 a.AllocationID,
                 a.StudentID,
-
                 CONCAT(
                     s.FirstName,
                     ' ',
                     s.LastName
                 ),
-
                 h.HostelName,
                 r.RoomNumber,
                 bed.BedLabel
-
             FROM Allocation a
 
             JOIN Student s
@@ -1284,19 +1777,37 @@ elif menu == "Reports":
             """
         )
 
-    st.dataframe(cursor.fetchall(), use_container_width=True)
+        rows = cursor.fetchall()
+
+        df = pd.DataFrame(
+            rows,
+            columns=[
+                "Allocation ID",
+                "Student ID",
+                "Student Name",
+                "Hostel Name",
+                "Room Number",
+                "Bed"
+            ]
+        )
+
+
+    st.dataframe(
+        df,
+        use_container_width=True,
+        hide_index=True
+    )
 
     cursor.close()
     conn.close()
 
 
-# =====================================================
 # LOGOUT
-# =====================================================
-
 st.sidebar.divider()
 
-if st.sidebar.button("Logout"):
+if st.sidebar.button(
+    "Logout",
+    use_container_width=True
+):
     st.session_state.clear()
-
     st.switch_page("app.py")
