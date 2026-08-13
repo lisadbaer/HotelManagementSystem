@@ -7,7 +7,7 @@ def login(username, password):
     conn = get_connection()
     cursor = conn.cursor()
 
-    # Student login
+    # STUDENT LOGIN
     cursor.execute(
         """
         SELECT StudentID
@@ -24,7 +24,8 @@ def login(username, password):
         conn.close()
         return student[0], "student"
 
-    # Manager login
+
+    # MANAGER LOGIN
     cursor.execute(
         """
         SELECT ManagerID
@@ -41,13 +42,14 @@ def login(username, password):
         conn.close()
         return manager[0], "manager"
 
+
     cursor.close()
     conn.close()
 
     return None
 
 
-# Session state
+# SESSION STATE
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
@@ -61,24 +63,35 @@ if "role" not in st.session_state:
 st.title("University Hostel Management System")
 
 
-# Login
+# LOGIN SCREEN
 if not st.session_state.logged_in:
 
     st.subheader("Login")
 
     username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
+    password = st.text_input(
+        "Password",
+        type="password"
+    )
 
     if st.button("Login"):
 
         if not username or not password:
-            st.warning("Please enter your username and password.")
+            st.warning(
+                "Please enter your username and password."
+            )
 
         else:
+
             try:
-                user = login(username, password)
+
+                user = login(
+                    username,
+                    password
+                )
 
                 if user:
+
                     st.session_state.logged_in = True
                     st.session_state.user_id = user[0]
                     st.session_state.role = user[1]
@@ -86,17 +99,29 @@ if not st.session_state.logged_in:
                     st.rerun()
 
                 else:
-                    st.error("Invalid username or password.")
+
+                    st.error(
+                        "Invalid username or password."
+                    )
 
             except Exception as e:
-                st.error(f"Database error: {e}")
+
+                st.error(
+                    f"Database error: {e}"
+                )
 
 
-# Redirect
+# REDIRECT
 else:
 
     if st.session_state.role == "student":
-        st.switch_page("pages/Student_Int.py")
+
+        st.switch_page(
+            "pages/Student_Int.py"
+        )
 
     elif st.session_state.role == "manager":
-        st.switch_page("pages/Manager_Int.py")
+
+        st.switch_page(
+            "pages/Manager_Int.py"
+        )
