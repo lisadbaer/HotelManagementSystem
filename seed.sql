@@ -1,27 +1,46 @@
+-- ============================================================
+-- REVISED HOSTEL MANAGEMENT SEED DATA
+-- 25 students
+-- 4 hostels
+-- 25 rooms
+-- 50 beds total
+-- 25 currently occupied beds, 3 reserved beds, 22 vacant beds
+-- All Allocation / Bed / Maintenance / Visitor / Payment statuses represented
+-- 40 payment records
+-- Every student with an Active allocation has a final Paid record with Balance_Due = 0
+-- ============================================================
+
+USE Hostel_Management;
+
+SET FOREIGN_KEY_CHECKS = 0;
+DELETE FROM UserAccount;
+DELETE FROM Payment;
+DELETE FROM Inspection;
+DELETE FROM Maintenance;
+DELETE FROM Allocation;
+DELETE FROM Visit;
+DELETE FROM Visitor;
+DELETE FROM Bed;
+DELETE FROM Room;
+DELETE FROM Block;
+DELETE FROM Auxiliary_Staff;
+DELETE FROM Manager;
+DELETE FROM Student;
+DELETE FROM Semester;
+DELETE FROM Staff;
+DELETE FROM Hostel;
+SET FOREIGN_KEY_CHECKS = 1;
+
+ALTER TABLE Visit AUTO_INCREMENT = 1;
+
 
 INSERT INTO Hostel
 (HostelID, HostelName, Location, Capacity, GenderType)
 VALUES
-('H1', 'Araba Hostel', 'North Campus', 20, 'Female'),
-('H2', 'Johnson Hostel', 'East Campus', 16, 'Male'),
+('H1', 'Araba Hostel', 'North Campus', 12, 'Female'),
+('H2', 'Johnson Hostel', 'East Campus', 14, 'Male'),
 ('H3', 'Henry Hostel', 'West Campus', 12, 'Female'),
-('H4', 'Akua Hostel', 'South Campus', 10, 'Male'),
-('H5', 'Kofi Hostel', 'Near Library', 10, 'Male'),
-('H6', 'Ama Hostel', 'Near Cafeteria', 8, 'Female'),
-('H7', 'Mensah Hostel', 'North Gate', 8, 'Male'),
-('H8', 'Adwoa Hostel', 'East Gate', 6, 'Female'),
-('H9', 'Kwame Hostel', 'West Gate', 6, 'Male'),
-('H10', 'Mansa Hostel', 'South Gate', 6, 'Female'),
-('H11', 'Nana Hostel', 'Academic Area', 4, 'Male'),
-('H12', 'Abena Hostel', 'Science Area', 4, 'Female'),
-('H13', 'Kojo Hostel', 'Engineering Area', 4, 'Male'),
-('H14', 'Esi Hostel', 'Business Area', 4, 'Female'),
-('H15', 'Yaw Hostel', 'Library Area', 4, 'Male'),
-('H16', 'Akosua Hostel', 'Dining Area', 4, 'Female'),
-('H17', 'Kweku Hostel', 'Innovation Centre', 2, 'Male'),
-('H18', 'Adjoa Hostel', 'Dining Hall', 2, 'Female'),
-('H19', 'Kwadwo Hostel', 'Sports Area', 2, 'Male'),
-('H20', 'Mansa Annex', 'Auditorium Area', 2, 'Female');
+('H4', 'Akua Hostel', 'South Campus', 12, 'Male');
 
 INSERT INTO Staff
 (StaffID, First_Name, Last_Name, Phone, Email)
@@ -32,44 +51,18 @@ VALUES
 ('SF4', 'Daniel', 'Mensah', '0245123789', 'daniel@hostel.edu.gh'),
 ('SF5', 'Grace', 'Owusu', '0209876543', 'grace@hostel.edu.gh'),
 ('SF6', 'Michael', 'Boateng', '0551234567', 'michael@hostel.edu.gh'),
-('SF7', 'Linda', 'Adjei', '0542345678', 'linda@hostel.edu.gh'),
+('SF7', 'Linda', 'Adjei', '0543456789', 'linda@hostel.edu.gh'),
 ('SF8', 'Kwame', 'Asare', '0503456789', 'kwame@hostel.edu.gh'),
 ('SF9', 'Esther', 'Osei', '0244567890', 'esther@hostel.edu.gh'),
-('SF10', 'Samuel', 'Amoah', '0555678901', 'samuel@hostel.edu.gh'),
-('SF11', 'Patricia', 'Arthur', '0206789012', 'patricia@hostel.edu.gh'),
-('SF12', 'Joseph', 'Addo', '0547890123', 'joseph@hostel.edu.gh'),
-('SF13', 'Mary', 'Darko', '0508901234', 'mary@hostel.edu.gh'),
-('SF14', 'George', 'Badu', '0249012345', 'george@hostel.edu.gh'),
-('SF15', 'Janet', 'Frimpong', '0550123456', 'janet@hostel.edu.gh'),
-('SF16', 'Emmanuel', 'Agyeman', '0201234567', 'emmanuel@hostel.edu.gh'),
-('SF17', 'Rebecca', 'Opoku', '0542345689', 'rebecca@hostel.edu.gh'),
-('SF18', 'Isaac', 'Nyarko', '0503456780', 'isaac@hostel.edu.gh'),
-('SF19', 'Diana', 'Quaye', '0245678901', 'diana@hostel.edu.gh'),
-('SF20', 'Francis', 'Tetteh', '0556789012', 'francis@hostel.edu.gh');
+('SF10', 'Samuel', 'Amoah', '0555678901', 'samuel@hostel.edu.gh');
 
 INSERT INTO Semester
 (SemesterID, AcademicYear, SemesterName, StartDate, EndDate)
 VALUES
-('SEM01','2025/26','Semester 1','2026-01-01','2026-03-31'),
-('SEM02','2025/26','Semester 2','2026-05-01','2026-07-31'),
-('SEM03','2026/27','Semester 1','2027-01-01','2027-03-31'),
-('SEM04','2026/27','Semester 2','2027-05-01','2027-07-31'),
-('SEM05','2027/28','Semester 1','2028-01-01','2028-03-31'),
-('SEM06','2027/28','Semester 2','2028-05-01','2028-07-31'),
-('SEM07','2028/29','Semester 1','2029-01-01','2029-03-31'),
-('SEM08','2028/29','Semester 2','2029-05-01','2029-07-31'),
-('SEM09','2029/30','Semester 1','2030-01-01','2030-03-31'),
-('SEM10','2029/30','Semester 2','2030-05-01','2030-07-31'),
-('SEM11','2030/31','Semester 1','2031-01-01','2031-03-31'),
-('SEM12','2030/31','Semester 2','2031-05-01','2031-07-31'),
-('SEM13','2031/32','Semester 1','2032-01-01','2032-03-31'),
-('SEM14','2031/32','Semester 2','2032-05-01','2032-07-31'),
-('SEM15','2032/33','Semester 1','2033-01-01','2033-03-31'),
-('SEM16','2032/33','Semester 2','2033-05-01','2033-07-31'),
-('SEM17','2033/34','Semester 1','2034-01-01','2034-03-31'),
-('SEM18','2033/34','Semester 2','2034-05-01','2034-07-31'),
-('SEM19','2034/35','Semester 1','2035-01-01','2035-03-31'),
-('SEM20','2034/35','Semester 2','2035-05-01','2035-07-31');
+('SEM01', '2025/26', 'Semester 1', '2026-01-01', '2026-03-31'),
+('SEM02', '2025/26', 'Semester 2', '2026-05-01', '2026-07-31'),
+('SEM03', '2026/27', 'Semester 1', '2027-01-01', '2027-03-31'),
+('SEM04', '2026/27', 'Semester 2', '2027-05-01', '2027-07-31');
 
 INSERT INTO Student
 (StudentID, FirstName, LastName, Gender, DateOfBirth, Phone, Email, Programme, Year)
@@ -93,7 +86,12 @@ VALUES
 ('10172026', 'Isaac', 'Nyarko', 'Male', '2003-04-19', '0543456728', 'isaac.nyarko@ashesi.edu.gh', 'CS', 2026),
 ('10182028', 'Diana', 'Quaye', 'Female', '2005-06-28', '0504567839', 'diana.quaye@ashesi.edu.gh', 'BA', 2028),
 ('10192027', 'Francis', 'Agyeman', 'Male', '2004-01-13', '0245678940', 'francis.agyeman@ashesi.edu.gh', 'ENG', 2027),
-('10202026', 'Janet', 'Frimpong', 'Female', '2003-10-07', '0556789051', 'janet.frimpong@ashesi.edu.gh', 'LLB', 2026);
+('10202026', 'Janet', 'Frimpong', 'Female', '2003-10-07', '0556789051', 'janet.frimpong@ashesi.edu.gh', 'LLB', 2026),
+('10212028', 'Kojo', 'Annan', 'Male', '2005-02-21', '0241112233', 'kojo.annan@ashesi.edu.gh', 'CS', 2028),
+('10222027', 'Yaw', 'Ofori', 'Male', '2004-05-17', '0242223344', 'yaw.ofori@ashesi.edu.gh', 'BA', 2027),
+('10232026', 'Nana', 'Kumi', 'Male', '2003-08-09', '0243334455', 'nana.kumi@ashesi.edu.gh', 'ENG', 2026),
+('10242028', 'Akosua', 'Baah', 'Female', '2005-01-30', '0244445566', 'akosua.baah@ashesi.edu.gh', 'CS', 2028),
+('10252027', 'Esi', 'Amankwah', 'Female', '2004-12-12', '0245556677', 'esi.amankwah@ashesi.edu.gh', 'BA', 2027);
 
 INSERT INTO Manager
 (ManagerID, StaffID, AssignedHostel)
@@ -101,164 +99,64 @@ VALUES
 ('MF1', 'SF1', 'H1'),
 ('MF2', 'SF2', 'H2'),
 ('MF3', 'SF3', 'H3'),
-('MF4', 'SF4', 'H4'),
-('MF5', 'SF5', 'H5'),
-('MF6', 'SF6', 'H6'),
-('MF7', 'SF7', 'H7'),
-('MF8', 'SF8', 'H8'),
-('MF9', 'SF9', 'H9'),
-('MF10', 'SF10', 'H10'),
-('MF11', 'SF11', 'H11'),
-('MF12', 'SF12', 'H12'),
-('MF13', 'SF13', 'H13'),
-('MF14', 'SF14', 'H14'),
-('MF15', 'SF15', 'H15'),
-('MF16', 'SF16', 'H16'),
-('MF17', 'SF17', 'H17'),
-('MF18', 'SF18', 'H18'),
-('MF19', 'SF19', 'H19'),
-('MF20', 'SF20', 'H20');
+('MF4', 'SF4', 'H4');
 
 INSERT INTO Auxiliary_Staff
 (AuxiliaryID, StaffID, Role)
 VALUES
-('ASF1', 'SF1', 'Security'),
-('ASF2', 'SF2', 'Cleaner'),
-('ASF3', 'SF3', 'Maintenance'),
-('ASF4', 'SF4', 'Security'),
-('ASF5', 'SF5', 'Cleaner'),
-('ASF6', 'SF6', 'Maintenance'),
-('ASF7', 'SF7', 'Security'),
-('ASF8', 'SF8', 'Cleaner'),
-('ASF9', 'SF9', 'Maintenance'),
-('ASF10', 'SF10', 'Security'),
-('ASF11', 'SF11', 'Cleaner'),
-('ASF12', 'SF12', 'Maintenance'),
-('ASF13', 'SF13', 'Security'),
-('ASF14', 'SF14', 'Cleaner'),
-('ASF15', 'SF15', 'Maintenance'),
-('ASF16', 'SF16', 'Security'),
-('ASF17', 'SF17', 'Cleaner'),
-('ASF18', 'SF18', 'Maintenance'),
-('ASF19', 'SF19', 'Security'),
-('ASF20', 'SF20', 'Cleaner');
+('ASF1', 'SF5', 'Maintenance'),
+('ASF2', 'SF6', 'Security'),
+('ASF3', 'SF7', 'Maintenance'),
+('ASF4', 'SF8', 'Cleaner'),
+('ASF5', 'SF9', 'Maintenance'),
+('ASF6', 'SF10', 'Security');
 
 INSERT INTO Block
 (BlockID, BlockName, HostelID, No_of_Floors)
 VALUES
-
-('BK1','Araba North Block','H1',2),
-('BK2','Araba South Block','H1',2),
-('BK3','Araba East Block','H1',2),
-('BK4','Johnson North Block','H2',2),
-('BK5','Johnson South Block','H2',2),
-('BK6','Henry North Block','H3',2),
-('BK7','Henry South Block','H3',2),
-('BK8','Akua North Block','H4',2),
-('BK9','Akua South Block','H4',2),
-('BK10','Kofi North Block','H5',2),
-('BK11','Kofi South Block','H5',2),
-('BK12','Ama North Block','H6',2),
-('BK13','Ama South Block','H6',2),
-('BK14','Mensah North Block','H7',2),
-('BK15','Mensah South Block','H7',2),
-('BK16','Adwoa North Block','H8',1),
-('BK17','Adwoa South Block','H8',1),
-('BK18','Kwame North Block','H9',1),
-('BK19','Kwame South Block','H9',1),
-('BK20','Mansa North Block','H10',1),
-('BK21','Mansa South Block','H10',1),
-('BK22','Nana Block','H11',1),
-('BK23','Abena Block','H12',1),
-('BK24','Kojo Block','H13',1),
-('BK25','Esi Block','H14',1),
-('BK26','Yaw Block','H15',1),
-('BK27','Akosua Block','H16',1),
-('BK28','Kweku Block','H17',1),
-('BK29','Adjoa Block','H18',1),
-('BK30','Kwadwo Block','H19',1),
-('BK31','Mansa Annex Block','H20',1);
+('BK1', 'Araba Block', 'H1', 2),
+('BK2', 'Johnson Block', 'H2', 2),
+('BK3', 'Henry Block', 'H3', 2),
+('BK4', 'Akua Block', 'H4', 2);
 
 INSERT INTO Room
 (RoomID, RoomNumber, Floor, Capacity, BlockID, CurrentOccupancy)
 VALUES
-('R1','101',1,2,'BK1',0),
-('R2','102',1,2,'BK1',0),
-('R3','201',2,2,'BK1',0),
-('R4','202',2,2,'BK1',0),
-('R5','101',1,2,'BK2',0),
-('R6','102',1,2,'BK2',0),
-('R7','201',2,2,'BK2',2),
-('R8','101',1,2,'BK3',1),
-('R9','102',1,2,'BK3',1),
-('R10','201',2,2,'BK3',1),
-('R11','101',1,2,'BK4',2),
-('R12','102',1,2,'BK4',2),
-('R13','201',2,2,'BK4',1),
-('R14','202',2,2,'BK4',0),
-('R15','101',1,2,'BK5',0),
-('R16','102',1,2,'BK5',0),
-('R17','201',2,2,'BK5',0),
-('R18','202',2,2,'BK5',0),
-('R19','101',1,2,'BK6',0),
-('R20','102',1,2,'BK6',0),
-('R21','201',2,2,'BK6',0),
-('R22','101',1,2,'BK7',0),
-('R23','102',1,2,'BK7',0),
-('R24','201',2,2,'BK7',0),
-('R25','101',1,2,'BK8',0),
-('R26','102',1,2,'BK8',0),
-('R27','201',2,2,'BK8',0),
-('R28','101',1,2,'BK9',0),
-('R29','102',1,2,'BK9',0),
-('R30','101',1,2,'BK10',0),
-('R31','102',1,2,'BK10',0),
-('R32','201',2,2,'BK10',0),
-('R33','101',1,2,'BK11',0),
-('R34','102',1,2,'BK11',0),
-('R35','101',1,2,'BK12',0),
-('R36','102',1,2,'BK12',0),
-('R37','101',1,2,'BK13',0),
-('R38','102',1,2,'BK13',0),
-('R39','101',1,2,'BK14',0),
-('R40','102',1,2,'BK14',0),
-('R41','101',1,2,'BK15',0),
-('R42','102',1,2,'BK15',0),
-('R43','101',1,2,'BK16',0),
-('R44','102',1,2,'BK16',0),
-('R45','101',1,2,'BK17',0),
-('R46','101',1,2,'BK18',0),
-('R47','102',1,2,'BK18',0),
-('R48','101',1,2,'BK19',0),
-('R49','101',1,2,'BK20',0),
-('R50','102',1,2,'BK20',0),
-('R51','101',1,2,'BK21',0),
-('R52','101',1,2,'BK22',0),
-('R53','102',1,2,'BK22',0),
-('R54','101',1,2,'BK23',0),
-('R55','102',1,2,'BK23',0),
-('R56','101',1,2,'BK24',0),
-('R57','102',1,2,'BK24',0),
-('R58','101',1,2,'BK25',0),
-('R59','102',1,2,'BK25',0),
-('R60','101',1,2,'BK26',0),
-('R61','102',1,2,'BK26',0),
-('R62','101',1,2,'BK27',0),
-('R63','102',1,2,'BK27',0),
-('R64','101',1,2,'BK28',0),
-('R65','101',1,2,'BK29',0),
-('R66','101',1,2,'BK30',0),
-('R67','101',1,2,'BK31',0);
+('R1', '101', 1, 2, 'BK1', 2),
+('R2', '102', 1, 2, 'BK1', 2),
+('R3', '103', 1, 2, 'BK1', 2),
+('R4', '104', 2, 2, 'BK1', 0),
+('R5', '105', 2, 2, 'BK1', 0),
+('R6', '106', 2, 2, 'BK1', 0),
+('R7', '101', 1, 2, 'BK2', 2),
+('R8', '102', 1, 2, 'BK2', 2),
+('R9', '103', 1, 2, 'BK2', 2),
+('R10', '104', 2, 2, 'BK2', 1),
+('R11', '105', 2, 2, 'BK2', 0),
+('R12', '106', 2, 2, 'BK2', 0),
+('R13', '101', 1, 2, 'BK2', 0),
+('R14', '102', 1, 2, 'BK3', 2),
+('R15', '103', 1, 2, 'BK3', 2),
+('R16', '104', 2, 2, 'BK3', 2),
+('R17', '105', 2, 2, 'BK3', 0),
+('R18', '106', 2, 2, 'BK3', 0),
+('R19', '101', 1, 2, 'BK3', 0),
+('R20', '102', 1, 2, 'BK4', 2),
+('R21', '103', 1, 2, 'BK4', 2),
+('R22', '104', 2, 2, 'BK4', 2),
+('R23', '105', 2, 2, 'BK4', 0),
+('R24', '106', 2, 2, 'BK4', 0),
+('R25', '101', 1, 2, 'BK4', 0);
 
 INSERT INTO Bed
 (BedID, BedLabel, Status, RoomID)
 VALUES
-('Bed1', '1', 'Vacant', 'R1'),
-('Bed2', '2', 'Vacant', 'R1'),
-('Bed3', '1', 'Vacant', 'R2'),
-('Bed4', '2', 'Vacant', 'R2'),
-('Bed5', '1', 'Vacant', 'R3'),
-('Bed6', '2', 'Vacant', 'R3'),
+('Bed1', '1', 'Occupied', 'R1'),
+('Bed2', '2', 'Occupied', 'R1'),
+('Bed3', '1', 'Occupied', 'R2'),
+('Bed4', '2', 'Occupied', 'R2'),
+('Bed5', '1', 'Occupied', 'R3'),
+('Bed6', '2', 'Occupied', 'R3'),
 ('Bed7', '1', 'Vacant', 'R4'),
 ('Bed8', '2', 'Vacant', 'R4'),
 ('Bed9', '1', 'Vacant', 'R5'),
@@ -267,344 +165,238 @@ VALUES
 ('Bed12', '2', 'Vacant', 'R6'),
 ('Bed13', '1', 'Occupied', 'R7'),
 ('Bed14', '2', 'Occupied', 'R7'),
-('Bed15', '1', 'Vacant', 'R8'),
+('Bed15', '1', 'Occupied', 'R8'),
 ('Bed16', '2', 'Occupied', 'R8'),
-('Bed17', '1', 'Vacant', 'R9'),
+('Bed17', '1', 'Occupied', 'R9'),
 ('Bed18', '2', 'Occupied', 'R9'),
-('Bed19', '1', 'Vacant', 'R10'),
-('Bed20', '2', 'Occupied', 'R10'),
-('Bed21', '1', 'Occupied', 'R11'),
-('Bed22', '2', 'Occupied', 'R11'),
-('Bed23', '1', 'Occupied', 'R12'),
-('Bed24', '2', 'Occupied', 'R12'),
-('Bed25', '1', 'Occupied', 'R13'),
+('Bed19', '1', 'Occupied', 'R10'),
+('Bed20', '2', 'Reserved', 'R10'),
+('Bed21', '1', 'Vacant', 'R11'),
+('Bed22', '2', 'Vacant', 'R11'),
+('Bed23', '1', 'Vacant', 'R12'),
+('Bed24', '2', 'Vacant', 'R12'),
+('Bed25', '1', 'Vacant', 'R13'),
 ('Bed26', '2', 'Vacant', 'R13'),
-('Bed27', '1', 'Vacant', 'R14'),
-('Bed28', '2', 'Vacant', 'R14'),
-('Bed29', '1', 'Vacant', 'R15'),
-('Bed30', '2', 'Vacant', 'R15'),
-('Bed31', '1', 'Vacant', 'R16'),
-('Bed32', '2', 'Vacant', 'R16'),
-('Bed33', '1', 'Vacant', 'R17'),
-('Bed34', '2', 'Vacant', 'R17'),
+('Bed27', '1', 'Occupied', 'R14'),
+('Bed28', '2', 'Occupied', 'R14'),
+('Bed29', '1', 'Occupied', 'R15'),
+('Bed30', '2', 'Occupied', 'R15'),
+('Bed31', '1', 'Occupied', 'R16'),
+('Bed32', '2', 'Occupied', 'R16'),
+('Bed33', '1', 'Reserved', 'R17'),
+('Bed34', '2', 'Reserved', 'R17'),
 ('Bed35', '1', 'Vacant', 'R18'),
 ('Bed36', '2', 'Vacant', 'R18'),
 ('Bed37', '1', 'Vacant', 'R19'),
 ('Bed38', '2', 'Vacant', 'R19'),
-('Bed39', '1', 'Vacant', 'R20'),
-('Bed40', '2', 'Vacant', 'R20'),
-('Bed41', '1', 'Vacant', 'R21'),
-('Bed42', '2', 'Vacant', 'R21'),
-('Bed43', '1', 'Vacant', 'R22'),
-('Bed44', '2', 'Vacant', 'R22'),
+('Bed39', '1', 'Occupied', 'R20'),
+('Bed40', '2', 'Occupied', 'R20'),
+('Bed41', '1', 'Occupied', 'R21'),
+('Bed42', '2', 'Occupied', 'R21'),
+('Bed43', '1', 'Occupied', 'R22'),
+('Bed44', '2', 'Occupied', 'R22'),
 ('Bed45', '1', 'Vacant', 'R23'),
 ('Bed46', '2', 'Vacant', 'R23'),
 ('Bed47', '1', 'Vacant', 'R24'),
 ('Bed48', '2', 'Vacant', 'R24'),
 ('Bed49', '1', 'Vacant', 'R25'),
-('Bed50', '2', 'Vacant', 'R25'),
-('Bed51', '1', 'Vacant', 'R26'),
-('Bed52', '2', 'Vacant', 'R26'),
-('Bed53', '1', 'Vacant', 'R27'),
-('Bed54', '2', 'Vacant', 'R27'),
-('Bed55', '1', 'Vacant', 'R28'),
-('Bed56', '2', 'Vacant', 'R28'),
-('Bed57', '1', 'Vacant', 'R29'),
-('Bed58', '2', 'Vacant', 'R29'),
-('Bed59', '1', 'Vacant', 'R30'),
-('Bed60', '2', 'Vacant', 'R30'),
-('Bed61', '1', 'Vacant', 'R31'),
-('Bed62', '2', 'Vacant', 'R31'),
-('Bed63', '1', 'Vacant', 'R32'),
-('Bed64', '2', 'Vacant', 'R32'),
-('Bed65', '1', 'Vacant', 'R33'),
-('Bed66', '2', 'Vacant', 'R33'),
-('Bed67', '1', 'Vacant', 'R34'),
-('Bed68', '2', 'Vacant', 'R34'),
-('Bed69', '1', 'Vacant', 'R35'),
-('Bed70', '2', 'Vacant', 'R35'),
-('Bed71', '1', 'Vacant', 'R36'),
-('Bed72', '2', 'Vacant', 'R36'),
-('Bed73', '1', 'Vacant', 'R37'),
-('Bed74', '2', 'Vacant', 'R37'),
-('Bed75', '1', 'Vacant', 'R38'),
-('Bed76', '2', 'Vacant', 'R38'),
-('Bed77', '1', 'Vacant', 'R39'),
-('Bed78', '2', 'Vacant', 'R39'),
-('Bed79', '1', 'Vacant', 'R40'),
-('Bed80', '2', 'Vacant', 'R40'),
-('Bed81', '1', 'Vacant', 'R41'),
-('Bed82', '2', 'Vacant', 'R41'),
-('Bed83', '1', 'Vacant', 'R42'),
-('Bed84', '2', 'Vacant', 'R42'),
-('Bed85', '1', 'Vacant', 'R43'),
-('Bed86', '2', 'Vacant', 'R43'),
-('Bed87', '1', 'Vacant', 'R44'),
-('Bed88', '2', 'Vacant', 'R44'),
-('Bed89', '1', 'Vacant', 'R45'),
-('Bed90', '2', 'Vacant', 'R45'),
-('Bed91', '1', 'Vacant', 'R46'),
-('Bed92', '2', 'Vacant', 'R46'),
-('Bed93', '1', 'Vacant', 'R47'),
-('Bed94', '2', 'Vacant', 'R47'),
-('Bed95', '1', 'Vacant', 'R48'),
-('Bed96', '2', 'Vacant', 'R48'),
-('Bed97', '1', 'Vacant', 'R49'),
-('Bed98', '2', 'Vacant', 'R49'),
-('Bed99', '1', 'Vacant', 'R50'),
-('Bed100', '2', 'Vacant', 'R50'),
-('Bed101', '1', 'Vacant', 'R51'),
-('Bed102', '2', 'Vacant', 'R51'),
-('Bed103', '1', 'Vacant', 'R52'),
-('Bed104', '2', 'Vacant', 'R52'),
-('Bed105', '1', 'Vacant', 'R53'),
-('Bed106', '2', 'Vacant', 'R53'),
-('Bed107', '1', 'Vacant', 'R54'),
-('Bed108', '2', 'Vacant', 'R54'),
-('Bed109', '1', 'Vacant', 'R55'),
-('Bed110', '2', 'Vacant', 'R55'),
-('Bed111', '1', 'Vacant', 'R56'),
-('Bed112', '2', 'Vacant', 'R56'),
-('Bed113', '1', 'Vacant', 'R57'),
-('Bed114', '2', 'Vacant', 'R57'),
-('Bed115', '1', 'Vacant', 'R58'),
-('Bed116', '2', 'Vacant', 'R58'),
-('Bed117', '1', 'Vacant', 'R59'),
-('Bed118', '2', 'Vacant', 'R59'),
-('Bed119', '1', 'Vacant', 'R60'),
-('Bed120', '2', 'Vacant', 'R60'),
-('Bed121', '1', 'Vacant', 'R61'),
-('Bed122', '2', 'Vacant', 'R61'),
-('Bed123', '1', 'Vacant', 'R62'),
-('Bed124', '2', 'Vacant', 'R62'),
-('Bed125', '1', 'Vacant', 'R63'),
-('Bed126', '2', 'Vacant', 'R63'),
-('Bed127', '1', 'Vacant', 'R64'),
-('Bed128', '2', 'Vacant', 'R64'),
-('Bed129', '1', 'Vacant', 'R65'),
-('Bed130', '2', 'Vacant', 'R65'),
-('Bed131', '1', 'Vacant', 'R66'),
-('Bed132', '2', 'Vacant', 'R66'),
-('Bed133', '1', 'Vacant', 'R67'),
-('Bed134', '2', 'Vacant', 'R67');
+('Bed50', '2', 'Vacant', 'R25');
+
+INSERT INTO Visitor
+(VisitorID, VisitorName, Phone, ApprovalStatus)
+VALUES
+('V1', 'David Mensah', '0241010101', 'Approved'),
+('V2', 'Ama Serwaa', '0242020202', 'Approved'),
+('V3', 'Kofi Owusu', '0243030303', 'Rejected'),
+('V4', 'Linda Boateng', '0244040404', 'Approved'),
+('V5', 'Nana Addo', '0245050505', 'Approved'),
+('V6', 'Grace Quaye', '0246060606', 'Rejected'),
+('V7', 'Yaw Arthur', '0247070707', 'Approved'),
+('V8', 'Akua Darko', '0248080808', 'Approved'),
+('V9', 'Michael Osei', '0249090909', 'Rejected'),
+('V10', 'Esi Badu', '0241110000', 'Approved'),
+('V11', 'Kojo Asare', '0242220000', 'Approved'),
+('V12', 'Mary Adjei', '0243330000', 'Approved');
 
 INSERT INTO Visit
 (StudentID, VisitorID, CheckInTime, CheckOutTime, VisitDate)
 VALUES
-('10012028','V1','11:30:00','16:00:00','2027-01-10'),
-('10012028','V1','10:00:00','14:00:00','2027-02-05'),
-('10022027','V2','09:30:00','13:00:00','2027-01-15'),
-('10022027','V2','12:00:00','17:00:00','2027-02-12'),
-('10042028','V4','13:00:00','18:00:00','2027-02-01'),
-('10052026','V5','08:30:00','12:30:00','2027-02-03'),
-('10072027','V7','11:30:00','16:00:00','2027-02-06'),
-('10082026','V8','09:00:00','13:00:00','2027-02-08'),
-('10102027','V10','10:30:00','15:30:00','2027-02-11'),
-('10112026','V11','09:00:00','12:00:00','2027-02-13'),
-('10132027','V13','10:00:00','14:00:00','2027-02-17'),
-('10142026','V14','11:00:00','16:00:00','2027-02-18'),
-('10162027','V16','13:00:00','18:00:00','2027-02-22'),
-('10172026','V17','08:45:00','12:00:00','2027-02-24'),
-('10192027','V19','10:00:00','14:00:00','2027-02-27'),
-('10202026','V20','12:00:00','16:00:00','2027-03-01');
+('10012028', 'V1', '09:00:00', '12:30:00', '2027-01-10'),
+('10022027', 'V2', '10:00:00', '13:30:00', '2027-01-13'),
+('10032027', 'V4', '11:00:00', '14:30:00', '2027-01-16'),
+('10042028', 'V5', '12:00:00', '15:30:00', '2027-01-19'),
+('10052026', 'V7', '13:00:00', '16:30:00', '2027-01-22'),
+('10062028', 'V8', '09:00:00', '12:30:00', '2027-01-25'),
+('10072027', 'V10', '10:00:00', '13:30:00', '2027-01-28'),
+('10082026', 'V11', '11:00:00', '14:30:00', '2027-01-31'),
+('10092028', 'V12', '12:00:00', '15:30:00', '2027-02-03'),
+('10102027', 'V1', '13:00:00', '16:30:00', '2027-02-06'),
+('10112026', 'V2', '09:00:00', '12:30:00', '2027-02-09'),
+('10122028', 'V4', '10:00:00', '13:30:00', '2027-02-12'),
+('10132027', 'V5', '11:00:00', '14:30:00', '2027-02-15'),
+('10142026', 'V7', '12:00:00', '15:30:00', '2027-02-18'),
+('10152028', 'V8', '13:00:00', '16:30:00', '2027-02-21'),
+('10162027', 'V10', '09:00:00', '12:30:00', '2027-02-24'),
+('10172026', 'V11', '10:00:00', '13:30:00', '2027-02-27'),
+('10182028', 'V12', '11:00:00', '14:30:00', '2027-03-02'),
+('10192027', 'V1', '12:00:00', '15:30:00', '2027-03-05'),
+('10202026', 'V2', '13:00:00', '16:30:00', '2027-03-08');
 
 INSERT INTO Allocation
-(AllocationID, StudentID, BedID, SemesterID,
- AllocationStartDate, AllocationEndDate,
- OfferSentDate, AcceptanceDeadline, AcceptedDate, Status)
+(AllocationID, StudentID, BedID, SemesterID, AllocationStartDate, AllocationEndDate, OfferSentDate, AcceptanceDeadline, AcceptedDate, Status)
 VALUES
-('A00001','10012028','Bed21','SEM01',
- '2026-01-01','2026-03-31',
- '2025-12-01','2025-12-08','2025-12-03','Inactive'),
-
-('A00002','10022027','Bed22','SEM01',
- '2026-01-01','2026-03-31',
- '2025-12-01','2025-12-08','2025-12-04','Inactive'),
-
-('A00003','10032027','Bed3','SEM01',
- '2026-01-01','2026-03-31',
- '2025-12-02','2025-12-09','2025-12-05','Inactive'),
-
-('A00004','10042028','Bed4','SEM01',
- '2026-01-01','2026-03-31',
- '2025-12-02','2025-12-09','2025-12-06','Inactive'),
-
-('A00005','10012028','Bed23','SEM01',
- '2026-01-01','2026-03-31',
- '2025-12-03','2025-12-10','2025-12-05','Inactive'),
-
-('A00006','10052026','Bed21','SEM02',
- '2026-05-01','2026-07-31',
- '2026-04-01','2026-04-08','2026-04-03','Inactive'),
-
-('A00007','10062028','Bed7','SEM02',
- '2026-05-01','2026-07-31',
- '2026-04-01','2026-04-08','2026-04-04','Inactive'),
-
-('A00008','10072027','Bed22','SEM02',
- '2026-05-01','2026-07-31',
- '2026-04-02','2026-04-09','2026-04-05','Inactive'),
-
-('A00009','10082026','Bed9','SEM02',
- '2026-05-01','2026-07-31',
- '2026-04-02','2026-04-09','2026-04-06','Inactive'),
-
-('A00010','10092028','Bed23','SEM02',
- '2026-05-01','2026-07-31',
- '2026-04-03','2026-04-10','2026-04-07','Inactive'),
-
-('A00011','10012028','Bed21','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-01','2026-12-08','2026-12-03','Active'),
-
-('A00012','10022027','Bed22','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-01','2026-12-08','2026-12-05','Active'),
-
-('A00013','10032027','Bed13','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-02','2026-12-09','2026-12-06','Active'),
-
-('A00014','10042028','Bed14','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-02','2026-12-09','2026-12-07','Active'),
-
-('A00015','10052026','Bed23','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-03','2026-12-10','2026-12-05','Active'),
-
-('A00016','10062028','Bed16','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-03','2026-12-10','2026-12-08','Active'),
-
-('A00017','10072027','Bed24','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-04','2026-12-11','2026-12-06','Active'),
-
-('A00018','10082026','Bed18','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-04','2026-12-11','2026-12-07','Active'),
-
-('A00019','10092028','Bed25','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-05','2026-12-12','2026-12-09','Active'),
-
-('A00020','10102027','Bed20','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-05','2026-12-12','2026-12-10','Active'),
-
-('A00021','10112026','Bed26','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-01','2026-12-08',NULL,'Declined'),
-
-('A00022','10122028','Bed1','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-02','2026-12-09',NULL,'Declined'),
-
-('A00023','10132027','Bed27','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-03','2026-12-10',NULL,'Declined'),
-
-('A00024','10142026','Bed2','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-04','2026-12-11',NULL,'Declined'),
-
-('A00025','10152028','Bed28','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-05','2026-12-12',NULL,'Declined'),
-
-('A00026','10162027','Bed3','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-20','2026-12-27',NULL,'Pending'),
-
-('A00027','10172026','Bed29','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-21','2026-12-28',NULL,'Pending'),
-
-('A00028','10182028','Bed4','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-22','2026-12-29',NULL,'Pending'),
-
-('A00029','10192027','Bed30','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-23','2026-12-30',NULL,'Pending'),
-
-('A00030','10202026','Bed5','SEM03',
- '2027-01-01','2027-03-31',
- '2026-12-24','2026-12-31',NULL,'Pending');
+('A00001', '10012028', 'Bed13', 'SEM02', '2026-05-01', '2026-07-31', '2026-04-01', '2026-04-08', '2026-04-03', 'Inactive'),
+('A00002', '10022027', 'Bed14', 'SEM02', '2026-05-01', '2026-07-31', '2026-04-01', '2026-04-08', '2026-04-03', 'Inactive'),
+('A00003', '10032027', 'Bed1', 'SEM02', '2026-05-01', '2026-07-31', '2026-04-01', '2026-04-08', '2026-04-03', 'Inactive'),
+('A00004', '10042028', 'Bed2', 'SEM02', '2026-05-01', '2026-07-31', '2026-04-01', '2026-04-08', '2026-04-03', 'Inactive'),
+('A00005', '10052026', 'Bed15', 'SEM02', '2026-05-01', '2026-07-31', '2026-04-01', '2026-04-08', '2026-04-03', 'Inactive'),
+('A00006', '10012028', 'Bed13', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00007', '10022027', 'Bed14', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00008', '10032027', 'Bed1', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00009', '10042028', 'Bed2', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00010', '10052026', 'Bed15', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00011', '10062028', 'Bed3', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00012', '10072027', 'Bed16', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00013', '10082026', 'Bed4', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00014', '10092028', 'Bed17', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00015', '10102027', 'Bed5', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00016', '10112026', 'Bed18', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00017', '10122028', 'Bed6', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00018', '10132027', 'Bed19', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00019', '10142026', 'Bed27', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00020', '10152028', 'Bed39', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00021', '10162027', 'Bed28', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00022', '10172026', 'Bed40', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00023', '10182028', 'Bed29', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00024', '10192027', 'Bed41', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00025', '10202026', 'Bed30', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00026', '10212028', 'Bed42', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00027', '10222027', 'Bed43', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00028', '10232026', 'Bed44', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00029', '10242028', 'Bed31', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00030', '10252027', 'Bed32', 'SEM03', '2027-01-01', '2027-03-31', '2026-12-01', '2026-12-08', '2026-12-04', 'Active'),
+('A00031', '10052026', 'Bed21', 'SEM04', '2027-05-01', '2027-07-31', '2027-04-01', '2027-04-08', NULL, 'Declined'),
+('A00032', '10062028', 'Bed35', 'SEM04', '2027-05-01', '2027-07-31', '2027-04-01', '2027-04-08', NULL, 'Declined'),
+('A00033', '10012028', 'Bed20', 'SEM04', '2027-05-01', '2027-07-31', '2027-04-10', '2027-04-17', NULL, 'Pending'),
+('A00034', '10032027', 'Bed33', 'SEM04', '2027-05-01', '2027-07-31', '2027-04-10', '2027-04-17', NULL, 'Pending'),
+('A00035', '10042028', 'Bed34', 'SEM04', '2027-05-01', '2027-07-31', '2027-04-10', '2027-04-17', NULL, 'Pending');
 
 INSERT INTO Maintenance
 (MaintenanceID, RoomID, StudentID, StaffID, ManagerID, IssueDescription, RequestDate, Status, DateResolved)
 VALUES
-('M1', 'R1', '10012028', 'SF1', 'MF1', 'Faulty taps', '2026-01-12', 'Resolved', '2026-01-15'),
-('M2', 'R1', '10022027', 'SF1', 'MF1', 'Broken light bulb', '2026-01-15', 'Resolved', '2026-01-16'),
-('M3', 'R2', '10032027', 'SF2', 'MF2', 'Dead bulb', '2026-01-18', 'Pending', NULL),
-('M4', 'R2', '10042028', 'SF2', 'MF2', 'Faulty shower', '2026-01-20', 'Resolved', '2026-01-22'),
-('M5', 'R3', '10052026', 'SF3', 'MF3', 'Broken window', '2026-01-25', 'Pending', NULL),
-('M6', 'R3', '10062028', 'SF3', 'MF3', 'Blocked sink', '2026-01-28', 'Resolved', '2026-01-30'),
-('M7', 'R4', '10072027', 'SF4', 'MF4', 'Damaged door lock', '2026-02-01', 'Resolved', '2026-02-03'),
-('M8', 'R4', '10082026', 'SF4', 'MF4', 'Leaking pipe', '2026-02-04', 'Pending', NULL),
-('M9', 'R5', '10092028', 'SF5', 'MF5', 'Faulty socket', '2026-02-08', 'Resolved', '2026-02-10'),
-('M10', 'R5', '10102027', 'SF5', 'MF5', 'Damaged desk', '2026-02-11', 'Resolved', '2026-02-14'),
-('M11', 'R6', '10112026', 'SF6', 'MF6', 'Broken chair', '2026-02-15', 'Pending', NULL),
-('M12', 'R6', '10122028', 'SF6', 'MF6', 'Water leakage', '2026-02-18', 'Resolved', '2026-02-20'),
-('M13', 'R7', '10132027', 'SF7', 'MF7', 'Faulty fan', '2026-02-22', 'Resolved', '2026-02-24'),
-('M14', 'R7', '10142026', 'SF7', 'MF7', 'Damaged ceiling', '2026-02-25', 'Pending', NULL),
-('M15', 'R8', '10152028', 'SF8', 'MF8', 'Broken cupboard', '2026-02-28', 'Resolved', '2026-03-02'),
-('M16', 'R8', '10162027', 'SF8', 'MF8', 'Faulty switch', '2026-03-04', 'Resolved', '2026-03-06'),
-('M17', 'R9', '10172026', 'SF9', 'MF9', 'Broken bed frame', '2026-03-08', 'Pending', NULL),
-('M18', 'R9', '10182028', 'SF9', 'MF9', 'Blocked drain', '2026-03-10', 'Resolved', '2026-03-12'),
-('M19', 'R10', '10192027', 'SF10', 'MF10', 'Damaged window', '2026-03-15', 'Resolved', '2026-03-18'),
-('M20', 'R10', '10202026', 'SF10', 'MF10', 'Faulty door handle', '2026-03-20', 'Pending', NULL);
+('M1', 'R7', '10012028', 'SF5', 'MF2', 'Faulty tap', '2027-01-06', 'Resolved', '2027-01-09'),
+('M2', 'R7', '10022027', 'SF7', 'MF2', 'Broken light', '2027-01-07', 'Pending', NULL),
+('M3', 'R1', '10032027', 'SF9', 'MF1', 'Leaking pipe', '2027-01-08', 'Ok', NULL),
+('M4', 'R1', '10042028', 'SF5', 'MF1', 'Blocked sink', '2027-01-09', 'Resolved', '2027-01-12'),
+('M5', 'R8', '10052026', 'SF7', 'MF2', 'Damaged socket', '2027-01-10', 'Pending', NULL),
+('M6', 'R2', '10062028', 'SF9', 'MF1', 'Broken chair', '2027-01-11', 'Resolved', '2027-01-14'),
+('M7', 'R8', '10072027', 'SF5', 'MF2', 'Faulty fan', '2027-01-12', 'Pending', NULL),
+('M8', 'R2', '10082026', 'SF7', 'MF1', 'Door lock issue', '2027-01-13', 'Ok', NULL),
+('M9', 'R9', '10092028', 'SF9', 'MF2', 'Faulty tap', '2027-01-14', 'Resolved', '2027-01-17'),
+('M10', 'R3', '10102027', 'SF5', 'MF1', 'Broken light', '2027-01-15', 'Pending', NULL),
+('M11', 'R9', '10112026', 'SF7', 'MF2', 'Leaking pipe', '2027-01-16', 'Resolved', '2027-01-19'),
+('M12', 'R3', '10122028', 'SF9', 'MF1', 'Blocked sink', '2027-01-17', 'Pending', NULL),
+('M13', 'R10', '10132027', 'SF5', 'MF2', 'Damaged socket', '2027-01-18', 'Ok', NULL),
+('M14', 'R14', '10142026', 'SF7', 'MF3', 'Broken chair', '2027-01-19', 'Resolved', '2027-01-22'),
+('M15', 'R20', '10152028', 'SF9', 'MF4', 'Faulty fan', '2027-01-20', 'Pending', NULL),
+('M16', 'R14', '10162027', 'SF5', 'MF3', 'Door lock issue', '2027-01-21', 'Resolved', '2027-01-24'),
+('M17', 'R20', '10172026', 'SF7', 'MF4', 'Faulty tap', '2027-01-22', 'Pending', NULL),
+('M18', 'R15', '10182028', 'SF9', 'MF3', 'Broken light', '2027-01-23', 'Ok', NULL),
+('M19', 'R21', '10192027', 'SF5', 'MF4', 'Leaking pipe', '2027-01-24', 'Resolved', '2027-01-27'),
+('M20', 'R15', '10202026', 'SF7', 'MF3', 'Blocked sink', '2027-01-25', 'Pending', NULL);
 
 INSERT INTO Inspection
 (InspectionID, RoomID, ManagerID, Inspection_date, RoomCondition, Remarks)
 VALUES
-('I1', 'R1', 'MF1', '2026-01-10', 'Good', 'Maintenance required on taps'),
-('I2', 'R2', 'MF2', '2026-01-11', 'Good', 'Light bulb requires replacement'),
-('I3', 'R3', 'MF3', '2026-01-12', 'Fair', 'Window requires repair'),
-('I4', 'R4', 'MF4', '2026-01-13', 'Good', 'Shower requires checking'),
-('I5', 'R5', 'MF5', '2026-01-14', 'Fair', 'Electrical socket requires repair'),
-('I6', 'R6', 'MF6', '2026-01-15', 'Good', 'Minor water leakage observed'),
-('I7', 'R7', 'MF7', '2026-01-16', 'Good', 'Door lock requires repair'),
-('I8', 'R8', 'MF8', '2026-01-17', 'Fair', 'Pipe requires attention'),
-('I9', 'R9', 'MF9', '2026-01-18', 'Good', 'Bed frame requires repair'),
-('I10', 'R10', 'MF10', '2026-01-19', 'Good', 'Door handle requires repair'),
-('I11', 'R11', 'MF11', '2026-01-20', 'Good', 'Room currently vacant'),
-('I12', 'R12', 'MF12', '2026-01-21', 'Good', 'Room currently vacant'),
-('I13', 'R13', 'MF13', '2026-01-22', 'Good', 'Room currently vacant'),
-('I14', 'R14', 'MF14', '2026-01-23', 'Good', 'Room currently vacant'),
-('I15', 'R15', 'MF15', '2026-01-24', 'Fair', 'Minor wall damage observed'),
-('I16', 'R16', 'MF16', '2026-01-25', 'Good', 'Room currently vacant'),
-('I17', 'R17', 'MF17', '2026-01-26', 'Good', 'Room currently vacant'),
-('I18', 'R18', 'MF18', '2026-01-27', 'Fair', 'Drain requires cleaning'),
-('I19', 'R19', 'MF19', '2026-01-28', 'Good', 'Room currently vacant'),
-('I20', 'R20', 'MF20', '2026-01-29', 'Good', 'Room currently vacant');
+('I1', 'R1', 'MF1', '2027-01-06', 'Good', 'Room in good condition'),
+('I2', 'R2', 'MF1', '2027-01-07', 'Fair', 'Minor repairs recommended'),
+('I3', 'R3', 'MF1', '2027-01-08', 'Poor', 'Maintenance attention required'),
+('I4', 'R4', 'MF1', '2027-01-09', 'Good', 'Room in good condition'),
+('I5', 'R5', 'MF1', '2027-01-10', 'Good', 'Room in good condition'),
+('I6', 'R6', 'MF1', '2027-01-11', 'Fair', 'Minor repairs recommended'),
+('I7', 'R7', 'MF2', '2027-01-12', 'Poor', 'Maintenance attention required'),
+('I8', 'R8', 'MF2', '2027-01-13', 'Good', 'Room in good condition'),
+('I9', 'R9', 'MF2', '2027-01-14', 'Good', 'Room in good condition'),
+('I10', 'R10', 'MF2', '2027-01-15', 'Fair', 'Minor repairs recommended'),
+('I11', 'R11', 'MF2', '2027-01-16', 'Poor', 'Maintenance attention required'),
+('I12', 'R12', 'MF2', '2027-01-17', 'Good', 'Room in good condition'),
+('I13', 'R13', 'MF2', '2027-01-18', 'Good', 'Room in good condition'),
+('I14', 'R14', 'MF3', '2027-01-19', 'Fair', 'Minor repairs recommended'),
+('I15', 'R15', 'MF3', '2027-01-20', 'Poor', 'Maintenance attention required'),
+('I16', 'R16', 'MF3', '2027-01-21', 'Good', 'Room in good condition'),
+('I17', 'R17', 'MF3', '2027-01-22', 'Good', 'Room in good condition'),
+('I18', 'R18', 'MF3', '2027-01-23', 'Fair', 'Minor repairs recommended'),
+('I19', 'R19', 'MF3', '2027-01-24', 'Poor', 'Maintenance attention required'),
+('I20', 'R20', 'MF4', '2027-01-25', 'Good', 'Room in good condition');
 
 INSERT INTO Payment
-(PaymentID, AllocationID, StudentID, Amount_paid,
- Payment_Date, Payment_Method, Payment_Status,
- Balance_Due, Deadline)
+(PaymentID, AllocationID, StudentID, Amount_paid, Payment_Date, Payment_Method, Payment_Status, Balance_Due, Deadline)
 VALUES
-('P00001','A00011','10012028',800.00,'2026-12-03','Mobile Money','Pending',700.00,'2026-12-20'),
-('P00002','A00011','10012028',700.00,'2026-12-07','Bank Transfer','Paid',0.00,'2026-12-20'),
-('P00003','A00012','10022027',1000.00,'2026-12-04','Bank Transfer','Pending',500.00,'2026-12-20'),
-('P00004','A00013','10032027',1500.00,'2026-12-05','Mobile Money','Paid',0.00,'2026-12-20'),
-('P00005','A00014','10042028',900.00,'2026-12-05','Cash','Pending',600.00,'2026-12-20'),
-('P00006','A00014','10042028',300.00,'2026-12-08','Cash','Pending',300.00,'2026-12-20'),
-('P00007','A00015','10052026',1500.00,'2026-12-06','Bank Transfer','Paid',0.00,'2026-12-20'),
-('P00008','A00016','10062028',500.00,'2026-12-07','Mobile Money','Pending',1000.00,'2026-12-20'),
-('P00009','A00017','10072027',1200.00,'2026-12-08','Cash','Pending',300.00,'2026-12-20'),
-('P00010','A00018','10082026',1500.00,'2026-12-09','Bank Transfer','Paid',0.00,'2026-12-20'),
-('P00011','A00019','10092028',750.00,'2026-12-09','Mobile Money','Pending',750.00,'2026-12-20'),
-('P00012','A00020','10102027',1500.00,'2026-12-10','Bank Transfer','Paid',0.00,'2026-12-20'),
-('P00015','A00012','10022027',250.00,'2026-12-12','Cash','Pending',250.00,'2026-12-20'),
-('P00018','A00016','10062028',300.00,'2026-12-14','Bank Transfer','Pending',700.00,'2026-12-20'),
-('P00019','A00017','10072027',300.00,'2026-12-14','Mobile Money','Paid',0.00,'2026-12-20'),
-('P00020','A00019','10092028',500.00,'2026-12-15','Cash','Pending',250.00,'2026-12-20');
+('P00001', 'A00001', '10012028', 1500.00, '2026-04-20', 'Bank Transfer', 'Paid', 0.00, '2026-04-30'),
+('P00002', 'A00002', '10022027', 1500.00, '2026-04-20', 'Bank Transfer', 'Paid', 0.00, '2026-04-30'),
+('P00003', 'A00003', '10032027', 1500.00, '2026-04-20', 'Bank Transfer', 'Paid', 0.00, '2026-04-30'),
+('P00004', 'A00004', '10042028', 1500.00, '2026-04-20', 'Bank Transfer', 'Paid', 0.00, '2026-04-30'),
+('P00005', 'A00005', '10052026', 1500.00, '2026-04-20', 'Bank Transfer', 'Paid', 0.00, '2026-04-30'),
+('P00006', 'A00006', '10012028', 800.00, '2026-12-05', 'Mobile Money', 'Pending', 700.00, '2026-12-20'),
+('P00007', 'A00006', '10012028', 700.00, '2026-12-12', 'Bank Transfer', 'Paid', 0.00, '2026-12-20'),
+('P00008', 'A00007', '10022027', 800.00, '2026-12-05', 'Mobile Money', 'Pending', 700.00, '2026-12-20'),
+('P00009', 'A00007', '10022027', 700.00, '2026-12-12', 'Bank Transfer', 'Paid', 0.00, '2026-12-20'),
+('P00010', 'A00008', '10032027', 800.00, '2026-12-05', 'Mobile Money', 'Pending', 700.00, '2026-12-20'),
+('P00011', 'A00008', '10032027', 700.00, '2026-12-12', 'Bank Transfer', 'Paid', 0.00, '2026-12-20'),
+('P00012', 'A00009', '10042028', 800.00, '2026-12-05', 'Mobile Money', 'Pending', 700.00, '2026-12-20'),
+('P00013', 'A00009', '10042028', 700.00, '2026-12-12', 'Bank Transfer', 'Paid', 0.00, '2026-12-20'),
+('P00014', 'A00010', '10052026', 800.00, '2026-12-05', 'Mobile Money', 'Pending', 700.00, '2026-12-20'),
+('P00015', 'A00010', '10052026', 700.00, '2026-12-12', 'Bank Transfer', 'Paid', 0.00, '2026-12-20'),
+('P00016', 'A00011', '10062028', 800.00, '2026-12-05', 'Mobile Money', 'Pending', 700.00, '2026-12-20'),
+('P00017', 'A00011', '10062028', 700.00, '2026-12-12', 'Bank Transfer', 'Paid', 0.00, '2026-12-20'),
+('P00018', 'A00012', '10072027', 800.00, '2026-12-05', 'Mobile Money', 'Pending', 700.00, '2026-12-20'),
+('P00019', 'A00012', '10072027', 700.00, '2026-12-12', 'Bank Transfer', 'Paid', 0.00, '2026-12-20'),
+('P00020', 'A00013', '10082026', 800.00, '2026-12-05', 'Mobile Money', 'Pending', 700.00, '2026-12-20'),
+('P00021', 'A00013', '10082026', 700.00, '2026-12-12', 'Bank Transfer', 'Paid', 0.00, '2026-12-20'),
+('P00022', 'A00014', '10092028', 800.00, '2026-12-05', 'Mobile Money', 'Pending', 700.00, '2026-12-20'),
+('P00023', 'A00014', '10092028', 700.00, '2026-12-12', 'Bank Transfer', 'Paid', 0.00, '2026-12-20'),
+('P00024', 'A00015', '10102027', 800.00, '2026-12-05', 'Mobile Money', 'Pending', 700.00, '2026-12-20'),
+('P00025', 'A00015', '10102027', 700.00, '2026-12-12', 'Bank Transfer', 'Paid', 0.00, '2026-12-20'),
+('P00026', 'A00016', '10112026', 1500.00, '2026-12-10', 'Mobile Money', 'Paid', 0.00, '2026-12-20'),
+('P00027', 'A00017', '10122028', 1500.00, '2026-12-10', 'Mobile Money', 'Paid', 0.00, '2026-12-20'),
+('P00028', 'A00018', '10132027', 1500.00, '2026-12-10', 'Mobile Money', 'Paid', 0.00, '2026-12-20'),
+('P00029', 'A00019', '10142026', 1500.00, '2026-12-10', 'Mobile Money', 'Paid', 0.00, '2026-12-20'),
+('P00030', 'A00020', '10152028', 1500.00, '2026-12-10', 'Mobile Money', 'Paid', 0.00, '2026-12-20'),
+('P00031', 'A00021', '10162027', 1500.00, '2026-12-10', 'Mobile Money', 'Paid', 0.00, '2026-12-20'),
+('P00032', 'A00022', '10172026', 1500.00, '2026-12-10', 'Mobile Money', 'Paid', 0.00, '2026-12-20'),
+('P00033', 'A00023', '10182028', 1500.00, '2026-12-10', 'Mobile Money', 'Paid', 0.00, '2026-12-20'),
+('P00034', 'A00024', '10192027', 1500.00, '2026-12-10', 'Mobile Money', 'Paid', 0.00, '2026-12-20'),
+('P00035', 'A00025', '10202026', 1500.00, '2026-12-10', 'Mobile Money', 'Paid', 0.00, '2026-12-20'),
+('P00036', 'A00026', '10212028', 1500.00, '2026-12-10', 'Mobile Money', 'Paid', 0.00, '2026-12-20'),
+('P00037', 'A00027', '10222027', 1500.00, '2026-12-10', 'Mobile Money', 'Paid', 0.00, '2026-12-20'),
+('P00038', 'A00028', '10232026', 1500.00, '2026-12-10', 'Mobile Money', 'Paid', 0.00, '2026-12-20'),
+('P00039', 'A00029', '10242028', 1500.00, '2026-12-10', 'Mobile Money', 'Paid', 0.00, '2026-12-20'),
+('P00040', 'A00030', '10252027', 1500.00, '2026-12-10', 'Mobile Money', 'Paid', 0.00, '2026-12-20');
 
 INSERT INTO UserAccount
 (Username, PasswordHash, Role)
 VALUES
 ('student1', 'password', 'Student'),
 ('manager1', 'password', 'Manager');
+
+
+-- Verification queries
+SELECT COUNT(*) AS Students FROM Student;
+SELECT COUNT(*) AS Rooms FROM Room;
+SELECT COUNT(*) AS Beds FROM Bed;
+
+SELECT Status, COUNT(*) AS Count
+FROM Allocation
+GROUP BY Status;
+
+SELECT Status, COUNT(*) AS Count
+FROM Bed
+GROUP BY Status;
+
+SELECT Payment_Status, COUNT(*) AS Count
+FROM Payment
+GROUP BY Payment_Status;
+
+SELECT ApprovalStatus, COUNT(*) AS Count
+FROM Visitor
+GROUP BY ApprovalStatus;
