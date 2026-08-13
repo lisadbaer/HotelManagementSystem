@@ -23,10 +23,10 @@ Create table Staff(
 
 CREATE TABLE SEMESTER (
     SemesterID VARCHAR(10) PRIMARY KEY,
-    AcademicYear VARCHAR(10),
-    SemesterName VARCHAR(50),
+    AcademicYear VARCHAR(10) not null,
+    SemesterName VARCHAR(50) not null,
     StartDate DATE not null,
-    EndDate DATE not null
+    EndDate DATE not null CHECK(EndDate > StartDate)
 );
 
 
@@ -35,11 +35,11 @@ create table Student(
     FirstName varchar(25) not null,
     LastName varChar(25) not null,
     Gender Enum('Female','Male') not null,
-    DateOfBirth date,
-    Phone varChar(10),
+    DateOfBirth date not null,
+    Phone varChar(10) not null,
     Email varchar(60) not null,
-    Programme Enum('CS','BA','ENG','LLB'),
-    Year int
+    Programme Enum('CS','BA','ENG','LLB') not null,
+    Class int not null
 );
 
 
@@ -94,15 +94,14 @@ create table Bed(
 create table Visitor(
     VisitorID varchar(10) primary key,
     VisitorName varchar(120) not null,
-    Phone varChar(10),
-    ApprovalStatus Enum ('Approved','Rejected')
+    Phone varChar(20) not null,
+    ApprovalStatus Enum ('Approved','Rejected') not null
 );
 
 
 create table Visit(
     VisitID int auto_increment primary key,
     StudentID varChar(8) not null,
-    VisitorID varChar(10) not null,
     CheckInTime time,
     CheckOutTime time,
     VisitDate date,
@@ -150,7 +149,7 @@ create table Inspection(
     InspectionID varchar(10) primary key,
     RoomID varchar(10) NOT NULL,
     ManagerID varchar(10) NOT NULL,
-    Inspection_date date NOT NULL,
+    InspectionDate date NOT NULL,
     RoomCondition varchar(20) NOT NULL,
     Remarks varchar(255),
     foreign key(RoomID) references Room(RoomID),
