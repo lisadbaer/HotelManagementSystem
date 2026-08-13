@@ -2,12 +2,56 @@ import streamlit as st
 from database import get_connection
 
 
+# -----------------------------------------------------
+# PAGE CONFIGURATION
+# -----------------------------------------------------
+st.set_page_config(
+    page_title="Hostel Management System",
+    page_icon="🏠",
+    layout="centered"
+)
+
+
+# -----------------------------------------------------
+# SIMPLE STYLING
+# -----------------------------------------------------
+st.markdown(
+    """
+    <style>
+
+    .stApp {
+        background-color: #f7f7f7;
+    }
+
+    h1, h2, h3 {
+        color: #1f2937;
+    }
+
+    div.stButton > button {
+        border-radius: 8px;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+    }
+
+    [data-testid="stTextInput"] input {
+        border-radius: 7px;
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# -----------------------------------------------------
+# LOGIN FUNCTION
+# -----------------------------------------------------
 def login(username, password):
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    # STUDENT LOGIN
+    # Student
     cursor.execute(
         """
         SELECT StudentID
@@ -25,7 +69,7 @@ def login(username, password):
         return student[0], "student"
 
 
-    # MANAGER LOGIN
+    # Manager
     cursor.execute(
         """
         SELECT ManagerID
@@ -49,7 +93,9 @@ def login(username, password):
     return None
 
 
+# -----------------------------------------------------
 # SESSION STATE
+# -----------------------------------------------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
@@ -60,23 +106,39 @@ if "role" not in st.session_state:
     st.session_state.role = None
 
 
-st.title("University Hostel Management System")
-
-
+# -----------------------------------------------------
 # LOGIN SCREEN
+# -----------------------------------------------------
 if not st.session_state.logged_in:
+
+    st.title("🏠 University Hostel Management System")
+
+    st.write(
+        "Manage hostel allocations, maintenance, visitors and payments."
+    )
+
+    st.divider()
 
     st.subheader("Login")
 
-    username = st.text_input("Username")
-    password = st.text_input(
-        "Password",
-        type="password"
+    username = st.text_input(
+        "Username",
+        placeholder="Enter Student ID or Manager ID"
     )
 
-    if st.button("Login"):
+    password = st.text_input(
+        "Password",
+        type="password",
+        placeholder="Enter password"
+    )
+
+    if st.button(
+        "Login",
+        use_container_width=True
+    ):
 
         if not username or not password:
+
             st.warning(
                 "Please enter your username and password."
             )
@@ -111,7 +173,9 @@ if not st.session_state.logged_in:
                 )
 
 
+# -----------------------------------------------------
 # REDIRECT
+# -----------------------------------------------------
 else:
 
     if st.session_state.role == "student":
