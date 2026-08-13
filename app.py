@@ -2,25 +2,18 @@ import streamlit as st
 from database import get_connection
 
 
-# -----------------------------------------------------
-# PAGE CONFIGURATION
-# -----------------------------------------------------
 st.set_page_config(
     page_title="Hostel Management System",
-    page_icon="🏠",
     layout="centered"
 )
 
 
-# -----------------------------------------------------
-# SIMPLE STYLING
-# -----------------------------------------------------
 st.markdown(
     """
     <style>
 
     .stApp {
-        background-color: #f7f7f7;
+        background-color: #eceff1;
     }
 
     h1, h2, h3 {
@@ -43,15 +36,11 @@ st.markdown(
 )
 
 
-# -----------------------------------------------------
-# LOGIN FUNCTION
-# -----------------------------------------------------
 def login(username, password):
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    # Student
     cursor.execute(
         """
         SELECT StudentID
@@ -66,10 +55,10 @@ def login(username, password):
     if student and password == "student123":
         cursor.close()
         conn.close()
+
         return student[0], "student"
 
 
-    # Manager
     cursor.execute(
         """
         SELECT ManagerID
@@ -84,6 +73,7 @@ def login(username, password):
     if manager and password == "manager123":
         cursor.close()
         conn.close()
+
         return manager[0], "manager"
 
 
@@ -93,9 +83,6 @@ def login(username, password):
     return None
 
 
-# -----------------------------------------------------
-# SESSION STATE
-# -----------------------------------------------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
@@ -106,12 +93,9 @@ if "role" not in st.session_state:
     st.session_state.role = None
 
 
-# -----------------------------------------------------
-# LOGIN SCREEN
-# -----------------------------------------------------
 if not st.session_state.logged_in:
 
-    st.title("🏠 University Hostel Management System")
+    st.title("University Hostel Management System")
 
     st.write(
         "Manage hostel allocations, maintenance, visitors and payments."
@@ -173,9 +157,6 @@ if not st.session_state.logged_in:
                 )
 
 
-# -----------------------------------------------------
-# REDIRECT
-# -----------------------------------------------------
 else:
 
     if st.session_state.role == "student":

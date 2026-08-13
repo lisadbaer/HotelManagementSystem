@@ -4,25 +4,26 @@ from database import get_connection
 from datetime import date
 
 
-# -----------------------------------------------------
+# =====================================================
 # PAGE CONFIGURATION
-# -----------------------------------------------------
+# =====================================================
+
 st.set_page_config(
     page_title="Student Dashboard",
-    page_icon="🎓",
     layout="wide"
 )
 
 
-# -----------------------------------------------------
+# =====================================================
 # SIMPLE STYLING
-# -----------------------------------------------------
+# =====================================================
+
 st.markdown(
     """
     <style>
 
     .stApp {
-        background-color: #f7f7f7;
+        background-color: #eceff1;
     }
 
     h1, h2, h3 {
@@ -30,8 +31,15 @@ st.markdown(
     }
 
     [data-testid="stSidebar"] {
-        background-color: white;
-        border-right: 1px solid #e5e7eb;
+        background-color: #e2e6e9;
+        border-right: 1px solid #cbd0d4;
+    }
+
+    [data-testid="stMetric"] {
+        background-color: #f5f5f5;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #d1d5db;
     }
 
     div.stButton > button {
@@ -40,7 +48,7 @@ st.markdown(
     }
 
     [data-testid="stDataFrame"] {
-        background-color: white;
+        background-color: #f5f5f5;
         border-radius: 8px;
     }
 
@@ -50,9 +58,10 @@ st.markdown(
 )
 
 
-# -----------------------------------------------------
+# =====================================================
 # ACCESS CONTROL
-# -----------------------------------------------------
+# =====================================================
+
 if (
     "logged_in" not in st.session_state
     or "role" not in st.session_state
@@ -70,19 +79,21 @@ if st.session_state.role != "student":
 student_id = st.session_state.user_id
 
 
-# -----------------------------------------------------
-# TITLE
-# -----------------------------------------------------
-st.title("🎓 Student Dashboard")
+# =====================================================
+# PAGE TITLE
+# =====================================================
+
+st.title("Student Dashboard")
 
 st.caption(
     "View your allocation, payments, maintenance requests and visits."
 )
 
 
-# -----------------------------------------------------
+# =====================================================
 # SIDEBAR MENU
-# -----------------------------------------------------
+# =====================================================
+
 if "student_menu" not in st.session_state:
     st.session_state.student_menu = "My Allocation"
 
@@ -138,12 +149,19 @@ menu = st.session_state.student_menu
 # =====================================================
 # MY ALLOCATION
 # =====================================================
+
 if menu == "My Allocation":
 
     st.header("My Allocation")
 
+    st.caption(
+        "View your current hostel and room allocation."
+    )
+
+
     conn = get_connection()
     cursor = conn.cursor()
+
 
     cursor.execute(
         """
@@ -151,11 +169,16 @@ if menu == "My Allocation":
             s.FirstName,
             s.LastName,
             s.StudentID,
+            s.Programme,
+            s.Year,
             h.HostelName,
+            b.BlockName,
             r.RoomNumber,
             bed.BedLabel,
             a.AllocationStartDate,
-            a.AllocationEndDate
+            a.AllocationEndDate,
+            a.Status
+
         FROM Student s
 
         JOIN Allocation a
@@ -173,13 +196,18 @@ if menu == "My Allocation":
         JOIN Hostel h
             ON b.HostelID = h.HostelID
 
-        WHERE s.StudentID = ?
-          AND a.Status = 'Active'
+        WHERE
+            s.StudentID = ?
+
+            AND
+            a.Status = 'Active'
         """,
         (student_id,)
     )
 
+
     student = cursor.fetchone()
+
 
     cursor.close()
     conn.close()
@@ -191,11 +219,15 @@ if menu == "My Allocation":
             first_name,
             last_name,
             number,
+            programme,
+            year,
             hostel,
+            block,
             room,
             bed,
             start_date,
-            end_date
+            end_date,
+            status
         ) = student
 
 
@@ -223,9 +255,31 @@ if menu == "My Allocation":
         )
 
 
-        st.write("**Student ID:**", number)
-        st.write("**Allocation Start:**", start_date)
-        st.write("**Allocation End:**", end_date)
+        st.divider()
+
+
+        details = pd.DataFrame(
+            [
+                ["Student ID", number],
+                ["Programme", programme],
+                ["Year", year],
+                ["Block", block],
+                ["Allocation Start", start_date],
+                ["Allocation End", end_date],
+                ["Status", status]
+            ],
+            columns=[
+                "Detail",
+                "Information"
+            ]
+        )
+
+
+        st.dataframe(
+            details,
+            use_container_width=True,
+            hide_index=True
+        )
 
 
     else:
@@ -238,12 +292,13 @@ if menu == "My Allocation":
 # =====================================================
 # MAKE PAYMENT
 # =====================================================
+
 elif menu == "Make Payment":
 
     st.header("Make Payment")
 
     st.caption(
-        "Record a payment for your current hostel allocation."
+        "Record a payment for your active hostel allocation."
     )
 
 
@@ -254,9 +309,14 @@ elif menu == "Make Payment":
     cursor.execute(
         """
         SELECT AllocationID
+
         FROM Allocation
-        WHERE StudentID = ?
-          AND Status = 'Active'
+
+        WHERE
+            StudentID = ?
+
+            AND
+            Status = 'Active'
         """,
         (student_id,)
     )
@@ -279,29 +339,38 @@ elif menu == "Make Payment":
 
         cursor.execute(
             """
-            SELECT Balance_Due
+            SELECT
+                Balance_Due
+
             FROM Payment
-            WHERE AllocationID = ?
+
+            WHERE
+                AllocationID = ?
+
             ORDER BY
                 Payment_Date DESC,
                 PaymentID DESC
+
             LIMIT 1
             """,
             (allocation_id,)
         )
 
 
-        previous = cursor.fetchone()
+        previous_payment = (
+            cursor.fetchone()
+        )
 
 
-        if previous:
+        if previous_payment:
 
             current_balance = float(
-                previous[0]
+                previous_payment[0]
             )
 
+
             st.info(
-                f"Current balance: GHS {current_balance:.2f}"
+                f"Current Balance: GHS {current_balance:.2f}"
             )
 
 
@@ -325,7 +394,7 @@ elif menu == "Make Payment":
         )
 
 
-        method = st.selectbox(
+        payment_method = st.selectbox(
             "Payment Method",
             [
                 "Mobile Money",
@@ -362,7 +431,8 @@ elif menu == "Make Payment":
             else:
 
                 balance = (
-                    current_balance - amount
+                    current_balance
+                    - amount
                 )
 
 
@@ -390,7 +460,8 @@ elif menu == "Make Payment":
                             Deadline
                         )
 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        VALUES
+                        (?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         (
                             payment_id,
@@ -398,7 +469,7 @@ elif menu == "Make Payment":
                             student_id,
                             amount,
                             date.today(),
-                            method,
+                            payment_method,
                             payment_status,
                             balance,
                             deadline
@@ -410,8 +481,8 @@ elif menu == "Make Payment":
 
 
                     st.success(
-                        f"Payment recorded successfully. "
-                        f"Remaining balance: GHS {balance:.2f}"
+                        f"Payment {payment_id} recorded successfully. "
+                        f"Remaining Balance: GHS {balance:.2f}"
                     )
 
 
@@ -431,9 +502,14 @@ elif menu == "Make Payment":
 # =====================================================
 # PAYMENT HISTORY
 # =====================================================
+
 elif menu == "My Payments":
 
     st.header("Payment History")
+
+    st.caption(
+        "View all payment records associated with your account."
+    )
 
 
     conn = get_connection()
@@ -444,6 +520,7 @@ elif menu == "My Payments":
         """
         SELECT
             PaymentID,
+            AllocationID,
             Amount_paid,
             Payment_Date,
             Payment_Method,
@@ -453,10 +530,12 @@ elif menu == "My Payments":
 
         FROM Payment
 
-        WHERE StudentID = ?
+        WHERE
+            StudentID = ?
 
         ORDER BY
-            Payment_Date DESC
+            Payment_Date DESC,
+            PaymentID DESC
         """,
         (student_id,)
     )
@@ -475,6 +554,7 @@ elif menu == "My Payments":
             payments,
             columns=[
                 "Payment ID",
+                "Allocation ID",
                 "Amount Paid",
                 "Payment Date",
                 "Payment Method",
@@ -502,12 +582,15 @@ elif menu == "My Payments":
 # =====================================================
 # SEND MAINTENANCE REQUEST
 # =====================================================
+
 elif menu == "Send Maintenance Request":
 
-    st.header("Maintenance Request")
+    st.header(
+        "Maintenance Request"
+    )
 
     st.caption(
-        "Report a maintenance issue in your allocated room."
+        "Report a maintenance issue in your currently allocated room."
     )
 
 
@@ -519,7 +602,8 @@ elif menu == "Send Maintenance Request":
         """
         SELECT
             r.RoomID,
-            r.RoomNumber
+            r.RoomNumber,
+            h.HostelName
 
         FROM Allocation a
 
@@ -529,8 +613,17 @@ elif menu == "Send Maintenance Request":
         JOIN Room r
             ON bed.RoomID = r.RoomID
 
-        WHERE a.StudentID = ?
-          AND a.Status = 'Active'
+        JOIN Block b
+            ON r.BlockID = b.BlockID
+
+        JOIN Hostel h
+            ON b.HostelID = h.HostelID
+
+        WHERE
+            a.StudentID = ?
+
+            AND
+            a.Status = 'Active'
         """,
         (student_id,)
     )
@@ -548,16 +641,29 @@ elif menu == "Send Maintenance Request":
 
     else:
 
-        room_id, room_number = room
+        (
+            room_id,
+            room_number,
+            hostel_name
+        ) = room
 
 
-        st.info(
-            f"Room: {room_number}"
+        col1, col2 = st.columns(2)
+
+
+        col1.metric(
+            "Hostel",
+            hostel_name
+        )
+
+        col2.metric(
+            "Room",
+            room_number
         )
 
 
         issue = st.text_area(
-            "Describe the maintenance problem"
+            "Describe the maintenance issue"
         )
 
 
@@ -575,64 +681,79 @@ elif menu == "Send Maintenance Request":
 
             else:
 
-                cursor.execute(
-                    """
-                    SELECT
-                        COALESCE(
-                            MAX(
-                                CAST(
-                                    SUBSTRING(
-                                        MaintenanceID,
-                                        2
+                try:
+
+                    cursor.execute(
+                        """
+                        SELECT
+                            COALESCE(
+                                MAX(
+                                    CAST(
+                                        SUBSTRING(
+                                            MaintenanceID,
+                                            2
+                                        )
+                                        AS UNSIGNED
                                     )
-                                    AS UNSIGNED
-                                )
-                            ),
-                            0
-                        ) + 1
+                                ),
+                                0
+                            ) + 1
 
-                    FROM Maintenance
-                    """
-                )
-
-
-                number = cursor.fetchone()[0]
-
-                maintenance_id = (
-                    f"M{number}"
-                )
-
-
-                cursor.execute(
-                    """
-                    INSERT INTO Maintenance
-                    (
-                        MaintenanceID,
-                        RoomID,
-                        StudentID,
-                        IssueDescription,
-                        RequestDate,
-                        Status
+                        FROM Maintenance
+                        """
                     )
 
-                    VALUES (?, ?, ?, ?, ?, 'Pending')
-                    """,
-                    (
-                        maintenance_id,
-                        room_id,
-                        student_id,
-                        issue,
-                        date.today()
+
+                    next_number = (
+                        cursor.fetchone()[0]
                     )
-                )
 
 
-                conn.commit()
+                    maintenance_id = (
+                        f"M{next_number}"
+                    )
 
 
-                st.success(
-                    f"Maintenance request {maintenance_id} submitted."
-                )
+                    cursor.execute(
+                        """
+                        INSERT INTO Maintenance
+                        (
+                            MaintenanceID,
+                            RoomID,
+                            StudentID,
+                            IssueDescription,
+                            RequestDate,
+                            Status
+                        )
+
+                        VALUES
+                        (?, ?, ?, ?, ?, 'Pending')
+                        """,
+                        (
+                            maintenance_id,
+                            room_id,
+                            student_id,
+                            issue,
+                            date.today()
+                        )
+                    )
+
+
+                    conn.commit()
+
+
+                    st.success(
+                        f"Maintenance request {maintenance_id} submitted successfully."
+                    )
+
+
+                except Exception as e:
+
+                    conn.rollback()
+
+                    st.error(
+                        f"Could not submit request: {e}"
+                    )
 
 
     cursor.close()
@@ -642,9 +763,16 @@ elif menu == "Send Maintenance Request":
 # =====================================================
 # MAINTENANCE HISTORY
 # =====================================================
+
 elif menu == "My Maintenance":
 
-    st.header("Maintenance History")
+    st.header(
+        "Maintenance History"
+    )
+
+    st.caption(
+        "Track maintenance requests you have submitted."
+    )
 
 
     conn = get_connection()
@@ -654,19 +782,31 @@ elif menu == "My Maintenance":
     cursor.execute(
         """
         SELECT
-            MaintenanceID,
-            RoomID,
-            IssueDescription,
-            RequestDate,
-            Status,
-            DateResolved
+            m.MaintenanceID,
+            h.HostelName,
+            r.RoomNumber,
+            m.IssueDescription,
+            m.RequestDate,
+            m.StaffID,
+            m.Status,
+            m.DateResolved
 
-        FROM Maintenance
+        FROM Maintenance m
 
-        WHERE StudentID = ?
+        JOIN Room r
+            ON m.RoomID = r.RoomID
+
+        JOIN Block b
+            ON r.BlockID = b.BlockID
+
+        JOIN Hostel h
+            ON b.HostelID = h.HostelID
+
+        WHERE
+            m.StudentID = ?
 
         ORDER BY
-            RequestDate DESC
+            m.RequestDate DESC
         """,
         (student_id,)
     )
@@ -685,9 +825,11 @@ elif menu == "My Maintenance":
             requests,
             columns=[
                 "Maintenance ID",
-                "Room ID",
+                "Hostel",
+                "Room",
                 "Issue",
                 "Request Date",
+                "Assigned Staff",
                 "Status",
                 "Date Resolved"
             ]
@@ -711,9 +853,14 @@ elif menu == "My Maintenance":
 # =====================================================
 # MY VISITS
 # =====================================================
+
 elif menu == "My Visits":
 
     st.header("My Visits")
+
+    st.caption(
+        "View visitors and visits recorded for you."
+    )
 
 
     conn = get_connection()
@@ -724,8 +871,10 @@ elif menu == "My Visits":
         """
         SELECT
             v.VisitID,
+            vr.VisitorID,
             vr.VisitorName,
             vr.Phone,
+            vr.ApprovalStatus,
             v.VisitDate,
             v.CheckInTime,
             v.CheckOutTime
@@ -736,10 +885,12 @@ elif menu == "My Visits":
             ON v.VisitorID =
                vr.VisitorID
 
-        WHERE v.StudentID = ?
+        WHERE
+            v.StudentID = ?
 
         ORDER BY
-            v.VisitDate DESC
+            v.VisitDate DESC,
+            v.CheckInTime DESC
         """,
         (student_id,)
     )
@@ -758,8 +909,10 @@ elif menu == "My Visits":
             visits,
             columns=[
                 "Visit ID",
+                "Visitor ID",
                 "Visitor Name",
                 "Phone",
+                "Visitor Status",
                 "Visit Date",
                 "Check-In",
                 "Check-Out"
@@ -781,9 +934,10 @@ elif menu == "My Visits":
         )
 
 
-# -----------------------------------------------------
+# =====================================================
 # LOGOUT
-# -----------------------------------------------------
+# =====================================================
+
 st.sidebar.divider()
 
 
