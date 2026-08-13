@@ -64,7 +64,9 @@ if menu == "My Allocation":
     conn.close()
 
     if student:
-        first_name, last_name, number, hostel, room, bed, start_date, end_date = student
+        (first_name, last_name, number, hostel, room, bed, start_date, end_date) = (
+            student
+        )
 
         st.header(f"Welcome, {first_name} {last_name}")
 
