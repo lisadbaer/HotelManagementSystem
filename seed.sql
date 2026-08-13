@@ -1,39 +1,3 @@
--- ============================================================
--- REVISED HOSTEL MANAGEMENT SEED DATA
--- 25 students
--- 4 hostels
--- 25 rooms
--- 50 beds total
--- 25 currently occupied beds, 3 reserved beds, 22 vacant beds
--- All Allocation / Bed / Maintenance / Visitor / Payment statuses represented
--- 40 payment records
--- Every student with an Active allocation has a final Paid record with Balance_Due = 0
--- ============================================================
-
-USE Hostel_Management;
-
-SET FOREIGN_KEY_CHECKS = 0;
-DELETE FROM UserAccount;
-DELETE FROM Payment;
-DELETE FROM Inspection;
-DELETE FROM Maintenance;
-DELETE FROM Allocation;
-DELETE FROM Visit;
-DELETE FROM Visitor;
-DELETE FROM Bed;
-DELETE FROM Room;
-DELETE FROM Block;
-DELETE FROM Auxiliary_Staff;
-DELETE FROM Manager;
-DELETE FROM Student;
-DELETE FROM Semester;
-DELETE FROM Staff;
-DELETE FROM Hostel;
-SET FOREIGN_KEY_CHECKS = 1;
-
-ALTER TABLE Visit AUTO_INCREMENT = 1;
-
-
 INSERT INTO Hostel
 (HostelID, HostelName, Location, Capacity, GenderType)
 VALUES
@@ -378,25 +342,3 @@ INSERT INTO UserAccount
 VALUES
 ('student1', 'password', 'Student'),
 ('manager1', 'password', 'Manager');
-
-
--- Verification queries
-SELECT COUNT(*) AS Students FROM Student;
-SELECT COUNT(*) AS Rooms FROM Room;
-SELECT COUNT(*) AS Beds FROM Bed;
-
-SELECT Status, COUNT(*) AS Count
-FROM Allocation
-GROUP BY Status;
-
-SELECT Status, COUNT(*) AS Count
-FROM Bed
-GROUP BY Status;
-
-SELECT Payment_Status, COUNT(*) AS Count
-FROM Payment
-GROUP BY Payment_Status;
-
-SELECT ApprovalStatus, COUNT(*) AS Count
-FROM Visitor
-GROUP BY ApprovalStatus;
