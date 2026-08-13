@@ -7,6 +7,8 @@ Lisa Baer | 47592028
 Kendise Quartey | 40432028 
 Chol Maguet Thiong | 51632027 
 
+
+
 Technologies used:
 Python – Used to implement the application logic.
 Streamlit – Used to create the web application and user interface.
@@ -15,11 +17,17 @@ SQL – Used for database creation, data manipulation, queries, views, procedure
 MariaDB Python Connector – Used to connect the Python application to the MariaDB database.
 Git/GitHub – Used for version control and collaboration.
 
+
+
 Database management system used:
 MariaDB – Used as the Database Management System (DBMS) to create, store, manage, and retrieve data for the University Hostel Management System.
 
+
+
 Programming language:
 Python – Used to develop the web application, implement the application logic, and connect the Streamlit interface to the MariaDB database.
+
+
 
 How to install the application:
 1) Clone or download the project
@@ -38,6 +46,8 @@ python -m pip install streamlit mariadb
 6) Run the application
 python -m streamlit run app.py
 The application will open in your web browser.
+
+
 
 
 How to create the database:
@@ -61,6 +71,8 @@ SOURCE C:/Users/YourName/Documents/hostel_management.sql;
 SHOW TABLES;
 
 
+
+
 How to populate the database:
 
 1)Make sure the database has been created and selected:
@@ -73,6 +85,9 @@ SOURCE path/to/hostel_management.sql;
 SELECT * FROM Student;
 SELECT * FROM Hostel;
 SELECT * FROM Room;
+
+
+
 
 How to run the application:
 
