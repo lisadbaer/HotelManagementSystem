@@ -1,17 +1,11 @@
-import hashlib
+import mariadb
 from database import get_connection
-
-
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
 
 
 def login(username, password):
 
     conn = get_connection()
     cursor = conn.cursor()
-
-    password_hash = hash_password(password)
 
     cursor.execute(
         """
@@ -20,7 +14,7 @@ def login(username, password):
         WHERE Username = ?
         AND PasswordHash = ?
     """,
-        (username, password_hash),
+        (username, password),
     )
 
     user = cursor.fetchone()
