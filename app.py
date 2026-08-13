@@ -1,6 +1,4 @@
 import streamlit as st
-import mariadb
-
 from database import get_connection
 
 
@@ -9,24 +7,50 @@ def login(username, password):
     conn = get_connection()
     cursor = conn.cursor()
 
+    # Student login
     cursor.execute(
         """
-        SELECT user_id, role
-        FROM users
-        WHERE username = ? AND password = ?
-    """,
-        (username, password),
+        SELECT StudentID
+        FROM Student
+        WHERE StudentID = ?
+        """,
+        (username,),
     )
 
-    result = cursor.fetchone()
+    student = cursor.fetchone()
+
+    if student and password == "student123":
+        cursor.close()
+        conn.close()
+
+        return student[0], "student"
+
+    # Manager login
+    cursor.execute(
+        """
+        SELECT ManagerID
+        FROM Manager
+        WHERE ManagerID = ?
+        """,
+        (username,),
+    )
+
+    manager = cursor.fetchone()
+
+    if manager and password == "manager123":
+        cursor.close()
+        conn.close()
+
+        return manager[0], "manager"
 
     cursor.close()
     conn.close()
 
-    return result
+    return None
 
 
 st.title("Hostel Management System")
+
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -34,6 +58,7 @@ if "logged_in" not in st.session_state:
 
 if not st.session_state.logged_in:
     username = st.text_input("Username")
+
     password = st.text_input("Password", type="password")
 
     if st.button("Login"):
@@ -51,10 +76,8 @@ if not st.session_state.logged_in:
 
 
 else:
-    st.success("Login successful")
-
     if st.session_state.role == "student":
-        st.switch_page("pages/student.py")
+        st.switch_page("pages/Student_Int.py")
 
     elif st.session_state.role == "manager":
-        st.switch_page("pages/manager.py")
+        st.switch_page("pages/Manager_Int.py")
