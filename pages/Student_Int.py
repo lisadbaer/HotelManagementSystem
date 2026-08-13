@@ -5,33 +5,21 @@ from database import get_connection
 # -----------------------------
 # ACCESS CONTROL
 # -----------------------------
-if (
-    "logged_in" not in st.session_state
-    or st.session_state.role != "student"
-):
+if "logged_in" not in st.session_state or st.session_state.role != "student":
     st.error("Student access only.")
     st.stop()
-
 
 st.title("Student Dashboard")
 
 student_id = st.session_state.user_id
 
-menu = st.sidebar.selectbox(
-    "Menu",
-    [
-        "My Allocation",
-        "My Payments",
-        "My Maintenance"
-    ]
-)
+menu = st.sidebar.selectbox("Menu", ["My Allocation", "My Payments", "My Maintenance"])
 
 
 # -----------------------------
 # MY ALLOCATION
 # -----------------------------
 if menu == "My Allocation":
-
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -60,7 +48,7 @@ if menu == "My Allocation":
         WHERE s.StudentID = ?
           AND a.Status = 'Active'
         """,
-        (student_id,)
+        (student_id,),
     )
 
     student = cursor.fetchone()
@@ -69,21 +57,11 @@ if menu == "My Allocation":
     conn.close()
 
     if student:
-
-        (
-            first_name,
-            last_name,
-            number,
-            hostel,
-            room,
-            bed,
-            start_date,
-            end_date
-        ) = student
-
-        st.header(
-            f"Welcome, {first_name} {last_name}"
+        (first_name, last_name, number, hostel, room, bed, start_date, end_date) = (
+            student
         )
+
+        st.header(f"Welcome, {first_name} {last_name}")
 
         st.write("Student ID:", number)
         st.write("Hostel:", hostel)
@@ -93,16 +71,13 @@ if menu == "My Allocation":
         st.write("Allocation End:", end_date)
 
     else:
-        st.warning(
-            "You do not currently have an active allocation."
-        )
+        st.warning("You do not currently have an active allocation.")
 
 
 # -----------------------------
 # MY PAYMENTS
 # -----------------------------
 elif menu == "My Payments":
-
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -119,17 +94,14 @@ elif menu == "My Payments":
         WHERE StudentID = ?
         ORDER BY Payment_Date DESC
         """,
-        (student_id,)
+        (student_id,),
     )
 
     payments = cursor.fetchall()
 
     st.subheader("Payment History")
 
-    st.dataframe(
-        payments,
-        use_container_width=True
-    )
+    st.dataframe(payments, use_container_width=True)
 
     cursor.close()
     conn.close()
@@ -139,7 +111,6 @@ elif menu == "My Payments":
 # MY MAINTENANCE
 # -----------------------------
 elif menu == "My Maintenance":
-
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -156,17 +127,14 @@ elif menu == "My Maintenance":
         WHERE StudentID = ?
         ORDER BY RequestDate DESC
         """,
-        (student_id,)
+        (student_id,),
     )
 
     requests = cursor.fetchall()
 
     st.subheader("Maintenance Requests")
 
-    st.dataframe(
-        requests,
-        use_container_width=True
-    )
+    st.dataframe(requests, use_container_width=True)
 
     cursor.close()
     conn.close()
