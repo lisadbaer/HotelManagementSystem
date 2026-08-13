@@ -2,9 +2,7 @@ import streamlit as st
 from database import get_connection
 
 
-# -----------------------------
 # ACCESS CONTROL
-# -----------------------------
 if (
     "logged_in" not in st.session_state
     or "role" not in st.session_state
@@ -18,32 +16,17 @@ if st.session_state.role != "student":
     st.stop()
 
 
-# -----------------------------
-# PAGE TITLE
-# -----------------------------
 st.title("Student Dashboard")
 
 student_id = st.session_state.user_id
 
 
-# -----------------------------
 # MENU
-# -----------------------------
-menu = st.sidebar.selectbox(
-    "Menu",
-    [
-        "My Allocation",
-        "My Payments",
-        "My Maintenance"
-    ]
-)
+menu = st.sidebar.selectbox("Menu", ["My Allocation", "My Payments", "My Maintenance"])
 
 
-# -----------------------------
 # MY ALLOCATION
-# -----------------------------
 if menu == "My Allocation":
-
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -72,7 +55,7 @@ if menu == "My Allocation":
         WHERE s.StudentID = ?
           AND a.Status = 'Active'
         """,
-        (student_id,)
+        (student_id,),
     )
 
     student = cursor.fetchone()
@@ -81,17 +64,7 @@ if menu == "My Allocation":
     conn.close()
 
     if student:
-
-        (
-            first_name,
-            last_name,
-            number,
-            hostel,
-            room,
-            bed,
-            start_date,
-            end_date
-        ) = student
+        first_name, last_name, number, hostel, room, bed, start_date, end_date = student
 
         st.header(f"Welcome, {first_name} {last_name}")
 
@@ -103,17 +76,11 @@ if menu == "My Allocation":
         st.write("Allocation End:", end_date)
 
     else:
-
-        st.warning(
-            "You do not currently have an active room allocation."
-        )
+        st.warning("You do not currently have an active room allocation.")
 
 
-# -----------------------------
 # MY PAYMENTS
-# -----------------------------
 elif menu == "My Payments":
-
     st.subheader("Payment History")
 
     conn = get_connection()
@@ -125,7 +92,6 @@ elif menu == "My Payments":
             PaymentID,
             Amount_paid,
             Payment_Date,
-            Payment_Method,
             Payment_Status,
             Balance_Due,
             Deadline
@@ -133,7 +99,7 @@ elif menu == "My Payments":
         WHERE StudentID = ?
         ORDER BY Payment_Date DESC
         """,
-        (student_id,)
+        (student_id,),
     )
 
     payments = cursor.fetchall()
@@ -142,19 +108,13 @@ elif menu == "My Payments":
     conn.close()
 
     if payments:
-        st.dataframe(
-            payments,
-            use_container_width=True
-        )
+        st.dataframe(payments, use_container_width=True)
     else:
         st.info("No payment records found.")
 
 
-# -----------------------------
 # MY MAINTENANCE
-# -----------------------------
 elif menu == "My Maintenance":
-
     st.subheader("Maintenance Requests")
 
     conn = get_connection()
@@ -173,7 +133,7 @@ elif menu == "My Maintenance":
         WHERE StudentID = ?
         ORDER BY RequestDate DESC
         """,
-        (student_id,)
+        (student_id,),
     )
 
     requests = cursor.fetchall()
@@ -182,17 +142,12 @@ elif menu == "My Maintenance":
     conn.close()
 
     if requests:
-        st.dataframe(
-            requests,
-            use_container_width=True
-        )
+        st.dataframe(requests, use_container_width=True)
     else:
         st.info("No maintenance requests found.")
 
 
-# -----------------------------
 # LOGOUT
-# -----------------------------
 st.sidebar.divider()
 
 if st.sidebar.button("Logout"):
