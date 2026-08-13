@@ -2,9 +2,7 @@ import streamlit as st
 from database import get_connection
 
 
-# -----------------------------
 # ACCESS CONTROL
-# -----------------------------
 if (
     "logged_in" not in st.session_state
     or "role" not in st.session_state
@@ -18,23 +16,16 @@ if st.session_state.role != "student":
     st.stop()
 
 
-# -----------------------------
-# PAGE TITLE
-# -----------------------------
 st.title("Student Dashboard")
 
 student_id = st.session_state.user_id
 
 
-# -----------------------------
 # MENU
-# -----------------------------
 menu = st.sidebar.selectbox("Menu", ["My Allocation", "My Payments", "My Maintenance"])
 
 
-# -----------------------------
 # MY ALLOCATION
-# -----------------------------
 if menu == "My Allocation":
     conn = get_connection()
     cursor = conn.cursor()
@@ -79,8 +70,6 @@ if menu == "My Allocation":
 
         st.header(f"Welcome, {first_name} {last_name}")
 
-        st.header(f"Welcome, {first_name} {last_name}")
-
         st.write("Student ID:", number)
         st.write("Hostel:", hostel)
         st.write("Room:", room)
@@ -92,9 +81,7 @@ if menu == "My Allocation":
         st.warning("You do not currently have an active room allocation.")
 
 
-# -----------------------------
 # MY PAYMENTS
-# -----------------------------
 elif menu == "My Payments":
     st.subheader("Payment History")
 
@@ -107,7 +94,6 @@ elif menu == "My Payments":
             PaymentID,
             Amount_paid,
             Payment_Date,
-            Payment_Method,
             Payment_Status,
             Balance_Due,
             Deadline
@@ -129,9 +115,7 @@ elif menu == "My Payments":
         st.info("No payment records found.")
 
 
-# -----------------------------
 # MY MAINTENANCE
-# -----------------------------
 elif menu == "My Maintenance":
     st.subheader("Maintenance Requests")
 
@@ -165,9 +149,7 @@ elif menu == "My Maintenance":
         st.info("No maintenance requests found.")
 
 
-# -----------------------------
 # LOGOUT
-# -----------------------------
 st.sidebar.divider()
 
 if st.sidebar.button("Logout"):

@@ -2,25 +2,31 @@ import streamlit as st
 from database import get_connection
 from backup import create_backup
 
-# -----------------------------
-# ACCESS CONTROL
-# -----------------------------
-if "logged_in" not in st.session_state or st.session_state.role != "manager":
+
+# Access control
+if (
+    "logged_in" not in st.session_state
+    or "role" not in st.session_state
+    or "user_id" not in st.session_state
+):
+    st.warning("Please log in first.")
+    st.stop()
+
+if st.session_state.role != "manager":
     st.error("Manager access only.")
     st.stop()
 
+
 st.title("Manager Dashboard")
 
+
 menu = st.sidebar.selectbox(
-    "Menu",
-    ["Dashboard", "Manage Students", "Search Students", "Reports"]
+    "Menu", ["Dashboard", "Manage Students", "Search Students", "Reports"]
 )
 
-# -----------------------------
-# DASHBOARD
-# -----------------------------
-if menu == "Dashboard":
 
+# Dashboard
+if menu == "Dashboard":
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -30,18 +36,22 @@ if menu == "Dashboard":
     cursor.execute("SELECT COUNT(*) FROM Room")
     rooms = cursor.fetchone()[0]
 
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT COUNT(*)
         FROM Allocation
         WHERE Status = 'Active'
-    """)
+        """
+    )
     allocations = cursor.fetchone()[0]
 
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT COUNT(*)
         FROM Bed
         WHERE Status = 'Vacant'
-    """)
+        """
+    )
     vacant_beds = cursor.fetchone()[0]
 
     cursor.close()
@@ -64,25 +74,19 @@ if menu == "Dashboard":
             st.error(f"Backup failed: {e}")
 
 
-# -----------------------------
-# STUDENT CRUD
-# -----------------------------
+# Student CRUD
 elif menu == "Manage Students":
-
     st.header("Manage Students")
 
-    action = st.selectbox(
-        "Choose Action",
-        ["View", "Add", "Update", "Delete"]
-    )
+    action = st.selectbox("Choose Action", ["View", "Add", "Update", "Delete"])
 
     conn = get_connection()
     cursor = conn.cursor()
 
     # READ
     if action == "View":
-
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 StudentID,
                 FirstName,
@@ -91,37 +95,28 @@ elif menu == "Manage Students":
                 Programme,
                 Year
             FROM Student
-        """)
+            """
+        )
 
-        st.dataframe(cursor.fetchall())
+        students = cursor.fetchall()
+
+        st.dataframe(students, use_container_width=True)
 
     # CREATE
     elif action == "Add":
-
         student_id = st.text_input("Student ID")
         first_name = st.text_input("First Name")
         last_name = st.text_input("Last Name")
 
-        gender = st.selectbox(
-            "Gender",
-            ["Male", "Female"]
-        )
+        gender = st.selectbox("Gender", ["Male", "Female"])
 
         email = st.text_input("Email")
 
-        programme = st.selectbox(
-            "Programme",
-            ["CS", "BA", "ENG", "LLB"]
-        )
+        programme = st.selectbox("Programme", ["CS", "BA", "ENG", "LLB"])
 
-        year = st.number_input(
-            "Year",
-            min_value=2026,
-            max_value=2035
-        )
+        year = st.number_input("Year", min_value=2026, max_value=2035)
 
         if st.button("Add Student"):
-
             if not student_id or not first_name or not last_name:
                 st.error("Please complete the required fields.")
 
@@ -130,7 +125,8 @@ elif menu == "Manage Students":
 
             else:
                 try:
-                    cursor.execute("""
+                    cursor.execute(
+                        """
                         INSERT INTO Student
                         (
                             StudentID,
@@ -142,18 +138,20 @@ elif menu == "Manage Students":
                             Year
                         )
                         VALUES (?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        student_id,
-                        first_name,
-                        last_name,
-                        gender,
-                        email,
-                        programme,
-                        year
-                    ))
+                        """,
+                        (
+                            student_id,
+                            first_name,
+                            last_name,
+                            gender,
+                            email,
+                            programme,
+                            year,
+                        ),
+                    )
 
                     conn.commit()
+
                     st.success("Student added successfully.")
 
                 except Exception as e:
@@ -161,23 +159,19 @@ elif menu == "Manage Students":
 
     # UPDATE
     elif action == "Update":
-
         student_id = st.text_input("Student ID")
         new_email = st.text_input("New Email")
         new_phone = st.text_input("New Phone")
 
         if st.button("Update Student"):
-
-            cursor.execute("""
+            cursor.execute(
+                """
                 UPDATE Student
                 SET Email = ?, Phone = ?
                 WHERE StudentID = ?
-            """,
-            (
-                new_email,
-                new_phone,
-                student_id
-            ))
+                """,
+                (new_email, new_phone, student_id),
+            )
 
             conn.commit()
 
@@ -188,19 +182,17 @@ elif menu == "Manage Students":
 
     # DELETE
     elif action == "Delete":
-
-        student_id = st.text_input(
-            "Student ID to delete"
-        )
+        student_id = st.text_input("Student ID to delete")
 
         if st.button("Delete Student"):
-
             try:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     DELETE FROM Student
                     WHERE StudentID = ?
-                """,
-                (student_id,))
+                    """,
+                    (student_id,),
+                )
 
                 conn.commit()
 
@@ -210,29 +202,23 @@ elif menu == "Manage Students":
                     st.warning("Student not found.")
 
             except Exception:
-                st.error(
-                    "Student cannot be deleted because related records exist."
-                )
+                st.error("Student cannot be deleted because related records exist.")
 
     cursor.close()
     conn.close()
 
 
-# -----------------------------
-# SEARCH AND FILTER
-# -----------------------------
+# Search
 elif menu == "Search Students":
-
     st.header("Search Students")
 
-    search = st.text_input(
-        "Enter Student ID or Name"
-    )
+    search = st.text_input("Enter Student ID or Name")
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT
             StudentID,
             FirstName,
@@ -244,49 +230,37 @@ elif menu == "Search Students":
         WHERE StudentID LIKE ?
            OR FirstName LIKE ?
            OR LastName LIKE ?
-    """,
-    (
-        f"%{search}%",
-        f"%{search}%",
-        f"%{search}%"
-    ))
+        """,
+        (f"%{search}%", f"%{search}%", f"%{search}%"),
+    )
 
     results = cursor.fetchall()
 
-    st.dataframe(results)
+    st.dataframe(results, use_container_width=True)
 
     cursor.close()
     conn.close()
 
 
-# -----------------------------
-# REPORTS
-# -----------------------------
+# Reports
 elif menu == "Reports":
-
     st.header("Reports")
 
-    report = st.selectbox(
-        "Choose Report",
-        [
-            "Hostel Occupancy",
-            "Outstanding Payments"
-        ]
-    )
+    report = st.selectbox("Choose Report", ["Hostel Occupancy", "Outstanding Payments"])
 
     conn = get_connection()
     cursor = conn.cursor()
 
     if report == "Hostel Occupancy":
-
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 h.HostelName,
                 SUM(r.Capacity) AS Capacity,
                 SUM(r.CurrentOccupancy) AS Occupied,
                 ROUND(
                     SUM(r.CurrentOccupancy)
-                    / SUM(r.Capacity) * 100,
+                    / NULLIF(SUM(r.Capacity), 0) * 100,
                     2
                 ) AS OccupancyRate
             FROM Hostel h
@@ -294,39 +268,44 @@ elif menu == "Reports":
                 ON h.HostelID = b.HostelID
             JOIN Room r
                 ON b.BlockID = r.BlockID
-            GROUP BY h.HostelID, h.HostelName
+            GROUP BY
+                h.HostelID,
+                h.HostelName
             ORDER BY OccupancyRate DESC
-        """)
+            """
+        )
 
     else:
-
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 s.StudentID,
                 CONCAT(
                     s.FirstName,
                     ' ',
                     s.LastName
-                ),
+                ) AS StudentName,
                 p.Balance_Due,
                 p.Deadline
             FROM Student s
             JOIN Payment p
                 ON s.StudentID = p.StudentID
             WHERE p.Balance_Due > 0
-        """)
+            ORDER BY p.Deadline
+            """
+        )
 
-    st.dataframe(cursor.fetchall())
+    results = cursor.fetchall()
+
+    st.dataframe(results, use_container_width=True)
 
     cursor.close()
     conn.close()
 
 
-# -----------------------------
-# LOGOUT
-# -----------------------------
+# Logout
 st.sidebar.divider()
 
 if st.sidebar.button("Logout"):
     st.session_state.clear()
-    st.switch_page("../app.py")
+    st.switch_page("app.py")
