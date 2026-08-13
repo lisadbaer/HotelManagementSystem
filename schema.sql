@@ -1,7 +1,5 @@
-
 CREATE DATABASE Hostel_Management;
 USE Hostel_Management;
-
 
 CREATE TABLE Hostel (
     HostelID varchar(10) primary key,
@@ -11,7 +9,6 @@ CREATE TABLE Hostel (
     GenderType ENUM ('Male', 'Female') not null
 );
 
-
 Create table Staff(
     StaffID varchar(10) primary key,
     First_Name varchar(50) not null,
@@ -20,7 +17,6 @@ Create table Staff(
     Email varchar(100) not null unique
 );
 
-
 CREATE TABLE SEMESTER (
     SemesterID VARCHAR(10) PRIMARY KEY,
     AcademicYear VARCHAR(10) not null,
@@ -28,7 +24,6 @@ CREATE TABLE SEMESTER (
     StartDate DATE not null,
     EndDate DATE not null CHECK(EndDate > StartDate)
 );
-
 
 create table Student(
     StudentID varchar(8) primary key,
@@ -42,7 +37,6 @@ create table Student(
     Class int not null
 );
 
-
 Create table Manager(
     ManagerID varchar(10) primary key,
     StaffID varchar(10) not null unique,
@@ -51,14 +45,12 @@ Create table Manager(
     foreign key (AssignedHostel) references Hostel(HostelID)
 );
 
-
 Create table Auxiliary_Staff(
     AuxiliaryID varchar(10) primary key,
     StaffID varchar(10) NOT NULL UNIQUE,
     Role varchar(30) not null,
     foreign key (StaffID) references Staff(StaffID)
 );
-
 
 create table Block (
     BlockID varchar(10) primary key,
@@ -67,7 +59,6 @@ create table Block (
     No_of_Floors int not null,
     foreign key (HostelID) references Hostel(HostelID)
 );
-
 
 create table Room (
     RoomID varchar(10) primary key,
@@ -81,7 +72,6 @@ create table Room (
     check (CurrentOccupancy <= Capacity)
 );
 
-
 create table Bed(
     BedID varchar(10) primary key,
     BedLabel varchar(10) not null,
@@ -90,14 +80,12 @@ create table Bed(
     foreign key (RoomID) references Room(RoomID)
 );
 
-
 create table Visitor(
     VisitorID varchar(10) primary key,
     VisitorName varchar(120) not null,
     Phone varChar(20) not null,
     ApprovalStatus Enum ('Approved','Rejected') not null
 );
-
 
 create table Visit(
     VisitID int auto_increment primary key,
@@ -108,7 +96,6 @@ create table Visit(
     foreign key (StudentID) references Student(StudentID),
     foreign key (VisitorID) references Visitor(VisitorID)
 );
-
 
 create table Allocation(
     AllocationID varChar(6) primary key,
@@ -127,7 +114,6 @@ create table Allocation(
     check (AllocationStartDate <= AllocationEndDate)
 );
 
-
 CREATE TABLE MAINTENANCE (
     MaintenanceID VARCHAR(10) PRIMARY KEY,
     RoomID VARCHAR(10),
@@ -143,7 +129,6 @@ CREATE TABLE MAINTENANCE (
     foreign key (StaffID) references STAFF(StaffID),
     foreign key (ManagerID) references MANAGER(ManagerID)
 );
-
 
 create table Inspection(
     InspectionID varchar(10) primary key,
@@ -170,9 +155,7 @@ CREATE TABLE Payment (
     FOREIGN KEY (StudentID) REFERENCES Student(StudentID)
 );
 
-
 Advanced Queries:
-
 
 -- QUERY 1: Show students with their complete room and hostel allocation
 
@@ -203,7 +186,6 @@ JOIN Hostel h
 WHERE a.Status = 'Active'
 ORDER BY h.HostelName, b.BlockName, r.RoomNumber;
 
-
 -- QUERY 2: Find rooms that are fully occupied
 
 SELECT
@@ -220,7 +202,6 @@ JOIN Hostel h
     ON b.HostelID = h.HostelID
 WHERE r.CurrentOccupancy >= r.Capacity
 ORDER BY h.HostelName, b.BlockName, r.RoomNumber;
-
 
 -- QUERY 3: Calculate occupancy rate for each hostel
 
@@ -246,7 +227,6 @@ GROUP BY
     h.Capacity
 ORDER BY OccupancyRate DESC;
 
-
 -- QUERY 4: Find students with outstanding balances
 
 SELECT
@@ -269,7 +249,6 @@ JOIN Payment p
     ON s.StudentID = p.StudentID
 WHERE p.Balance_Due > 0
 ORDER BY p.Deadline ASC;
-
 
 -- QUERY 5: Show active allocations and days remaining
 -- Changed from "expires within 30 days" because that returned no rows
@@ -298,7 +277,6 @@ JOIN Hostel h
     ON b.HostelID = h.HostelID
 WHERE a.Status = 'Active'
 ORDER BY a.AllocationEndDate;
-
 
 -- QUERY 6: Rank hostels by occupancy rate
 
@@ -336,7 +314,6 @@ SELECT
 FROM HostelOccupancy
 ORDER BY OccupancyRank;
 
-
 -- QUERY 7: Find rooms with vacant beds
 
 SELECT
@@ -367,7 +344,6 @@ GROUP BY
 HAVING VacantBeds > 0
 ORDER BY VacantBeds DESC;
 
-
 -- QUERY 8: Find students who submitted maintenance requests
 
 SELECT
@@ -385,7 +361,6 @@ JOIN Maintenance m
 JOIN Room r
     ON m.RoomID = r.RoomID
 ORDER BY m.RequestDate DESC;
-
 
 -- QUERY 9: Maintenance workload handled by each staff member
 -- Fixed so staff with zero requests do not appear to have one outstanding request
@@ -435,7 +410,6 @@ ORDER BY
     OutstandingRequests DESC,
     TotalRequests DESC;
 
-
 -- QUERY 10: Identify hostels with occupancy of at least 20%
 -- Changed from >80% because the current dataset had no hostel above 80%
 
@@ -459,13 +433,6 @@ GROUP BY
     h.HostelName
 HAVING OccupancyPercentage >= 20
 ORDER BY OccupancyPercentage DESC;
-
-CREATE TABLE UserAccount (
-    UserID INT AUTO_INCREMENT PRIMARY KEY,
-    Username VARCHAR(50) NOT NULL UNIQUE,
-    PasswordHash VARCHAR(255) NOT NULL,
-    Role ENUM('Student', 'Manager') NOT NULL
-);
 
 ALTER TABLE Student
 ADD UserID INT UNIQUE,
