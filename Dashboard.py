@@ -2,10 +2,7 @@ import streamlit as st
 from database import get_connection
 
 
-st.set_page_config(
-    page_title="Hostel Management System",
-    layout="centered"
-)
+st.set_page_config(page_title="Hostel Management System", layout="centered")
 
 
 st.markdown(
@@ -32,7 +29,7 @@ st.markdown(
 
     </style>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
 
@@ -47,7 +44,7 @@ def login(username, password):
         FROM Student
         WHERE StudentID = ?
         """,
-        (username,)
+        (username,),
     )
 
     student = cursor.fetchone()
@@ -58,14 +55,13 @@ def login(username, password):
 
         return student[0], "student"
 
-
     cursor.execute(
         """
         SELECT ManagerID
         FROM Manager
         WHERE ManagerID = ?
         """,
-        (username,)
+        (username,),
     )
 
     manager = cursor.fetchone()
@@ -75,7 +71,6 @@ def login(username, password):
         conn.close()
 
         return manager[0], "manager"
-
 
     cursor.close()
     conn.close()
@@ -94,50 +89,27 @@ if "role" not in st.session_state:
 
 
 if not st.session_state.logged_in:
-
     st.title("University Hostel Management System")
 
-    st.write(
-        "Manage hostel allocations, maintenance, visitors and payments."
-    )
+    st.write("Manage hostel allocations, maintenance, visitors and payments.")
 
     st.divider()
 
     st.subheader("Login")
 
-    username = st.text_input(
-        "Username",
-        placeholder="Enter Student ID or Manager ID"
-    )
+    username = st.text_input("Username", placeholder="Enter Student ID or Manager ID")
 
-    password = st.text_input(
-        "Password",
-        type="password",
-        placeholder="Enter password"
-    )
+    password = st.text_input("Password", type="password", placeholder="Enter password")
 
-    if st.button(
-        "Login",
-        use_container_width=True
-    ):
-
+    if st.button("Login", use_container_width=True):
         if not username or not password:
-
-            st.warning(
-                "Please enter your username and password."
-            )
+            st.warning("Please enter your username and password.")
 
         else:
-
             try:
-
-                user = login(
-                    username,
-                    password
-                )
+                user = login(username, password)
 
                 if user:
-
                     st.session_state.logged_in = True
                     st.session_state.user_id = user[0]
                     st.session_state.role = user[1]
@@ -145,28 +117,15 @@ if not st.session_state.logged_in:
                     st.rerun()
 
                 else:
-
-                    st.error(
-                        "Invalid username or password."
-                    )
+                    st.error("Invalid username or password.")
 
             except Exception as e:
-
-                st.error(
-                    f"Database error: {e}"
-                )
+                st.error(f"Database error: {e}")
 
 
 else:
-
     if st.session_state.role == "student":
-
-        st.switch_page(
-            "pages/Student_Int.py"
-        )
+        st.switch_page("pages/Students.py")
 
     elif st.session_state.role == "manager":
-
-        st.switch_page(
-            "pages/Manager_Int.py"
-        )
+        st.switch_page("pages/Managers.py")
