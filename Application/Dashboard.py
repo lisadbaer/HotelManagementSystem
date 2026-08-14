@@ -125,7 +125,7 @@ if not st.session_state.logged_in:
 
 else:
     if st.session_state.role == "student":
-        st.switch_page("pages/Student_Int.py")
+        st.switch_page("pages/Students.py")
 
     elif st.session_state.role == "manager":
-        st.switch_page("pages/Manager_Int.py")
+        st.switch_page("pages/Managers.py")

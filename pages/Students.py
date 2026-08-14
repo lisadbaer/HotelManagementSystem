@@ -8,10 +8,7 @@ from datetime import date
 # PAGE CONFIGURATION
 # =====================================================
 
-st.set_page_config(
-    page_title="Student Dashboard",
-    layout="wide"
-)
+st.set_page_config(page_title="Student Dashboard", layout="wide")
 
 
 # =====================================================
@@ -54,7 +51,7 @@ st.markdown(
 
     </style>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
 
@@ -85,9 +82,7 @@ student_id = st.session_state.user_id
 
 st.title("Student Dashboard")
 
-st.caption(
-    "View your allocation, payments, maintenance requests and visits."
-)
+st.caption("View your allocation, payments, maintenance requests and visits.")
 
 
 # =====================================================
@@ -101,45 +96,27 @@ if "student_menu" not in st.session_state:
 st.sidebar.header("Student Menu")
 
 
-if st.sidebar.button(
-    "My Allocation",
-    use_container_width=True
-):
+if st.sidebar.button("My Allocation", use_container_width=True):
     st.session_state.student_menu = "My Allocation"
 
 
-if st.sidebar.button(
-    "Make Payment",
-    use_container_width=True
-):
+if st.sidebar.button("Make Payment", use_container_width=True):
     st.session_state.student_menu = "Make Payment"
 
 
-if st.sidebar.button(
-    "Payment History",
-    use_container_width=True
-):
+if st.sidebar.button("Payment History", use_container_width=True):
     st.session_state.student_menu = "My Payments"
 
 
-if st.sidebar.button(
-    "Maintenance Request",
-    use_container_width=True
-):
+if st.sidebar.button("Maintenance Request", use_container_width=True):
     st.session_state.student_menu = "Send Maintenance Request"
 
 
-if st.sidebar.button(
-    "Maintenance History",
-    use_container_width=True
-):
+if st.sidebar.button("Maintenance History", use_container_width=True):
     st.session_state.student_menu = "My Maintenance"
 
 
-if st.sidebar.button(
-    "My Visits",
-    use_container_width=True
-):
+if st.sidebar.button("My Visits", use_container_width=True):
     st.session_state.student_menu = "My Visits"
 
 
@@ -151,17 +128,12 @@ menu = st.session_state.student_menu
 # =====================================================
 
 if menu == "My Allocation":
-
     st.header("My Allocation")
 
-    st.caption(
-        "View your current hostel and room allocation."
-    )
-
+    st.caption("View your current hostel and room allocation.")
 
     conn = get_connection()
     cursor = conn.cursor()
-
 
     cursor.execute(
         """
@@ -202,19 +174,15 @@ if menu == "My Allocation":
             AND
             a.Status = 'Active'
         """,
-        (student_id,)
+        (student_id,),
     )
 
-
     student = cursor.fetchone()
-
 
     cursor.close()
     conn.close()
 
-
     if student:
-
         (
             first_name,
             last_name,
@@ -227,36 +195,20 @@ if menu == "My Allocation":
             bed,
             start_date,
             end_date,
-            status
+            status,
         ) = student
 
-
-        st.subheader(
-            f"Welcome, {first_name} {last_name}"
-        )
-
+        st.subheader(f"Welcome, {first_name} {last_name}")
 
         col1, col2, col3 = st.columns(3)
 
+        col1.metric("Hostel", hostel)
 
-        col1.metric(
-            "Hostel",
-            hostel
-        )
+        col2.metric("Room", room)
 
-        col2.metric(
-            "Room",
-            room
-        )
-
-        col3.metric(
-            "Bed",
-            bed
-        )
-
+        col3.metric("Bed", bed)
 
         st.divider()
-
 
         details = pd.DataFrame(
             [
@@ -266,27 +218,15 @@ if menu == "My Allocation":
                 ["Block", block],
                 ["Allocation Start", start_date],
                 ["Allocation End", end_date],
-                ["Status", status]
+                ["Status", status],
             ],
-            columns=[
-                "Detail",
-                "Information"
-            ]
+            columns=["Detail", "Information"],
         )
 
-
-        st.dataframe(
-            details,
-            use_container_width=True,
-            hide_index=True
-        )
-
+        st.dataframe(details, use_container_width=True, hide_index=True)
 
     else:
-
-        st.warning(
-            "You do not currently have an active allocation."
-        )
+        st.warning("You do not currently have an active allocation.")
 
 
 # =====================================================
@@ -294,17 +234,12 @@ if menu == "My Allocation":
 # =====================================================
 
 elif menu == "Make Payment":
-
     st.header("Make Payment")
 
-    st.caption(
-        "Record a payment for your active hostel allocation."
-    )
-
+    st.caption("Record a payment for your active hostel allocation.")
 
     conn = get_connection()
     cursor = conn.cursor()
-
 
     cursor.execute(
         """
@@ -318,24 +253,16 @@ elif menu == "Make Payment":
             AND
             Status = 'Active'
         """,
-        (student_id,)
+        (student_id,),
     )
-
 
     allocation = cursor.fetchone()
 
-
     if not allocation:
-
-        st.warning(
-            "You need an active allocation before making a payment."
-        )
-
+        st.warning("You need an active allocation before making a payment.")
 
     else:
-
         allocation_id = allocation[0]
-
 
         cursor.execute(
             """
@@ -353,98 +280,42 @@ elif menu == "Make Payment":
 
             LIMIT 1
             """,
-            (allocation_id,)
+            (allocation_id,),
         )
 
-
-        previous_payment = (
-            cursor.fetchone()
-        )
-
+        previous_payment = cursor.fetchone()
 
         if previous_payment:
+            current_balance = float(previous_payment[0])
 
-            current_balance = float(
-                previous_payment[0]
-            )
-
-
-            st.info(
-                f"Current Balance: GHS {current_balance:.2f}"
-            )
-
+            st.info(f"Current Balance: GHS {current_balance:.2f}")
 
         else:
+            current_balance = st.number_input("Total Hostel Fee", min_value=0.01)
 
-            current_balance = st.number_input(
-                "Total Hostel Fee",
-                min_value=0.01
-            )
+        payment_id = st.text_input("Payment ID", placeholder="Example: P00041")
 
-
-        payment_id = st.text_input(
-            "Payment ID",
-            placeholder="Example: P00041"
-        )
-
-
-        amount = st.number_input(
-            "Amount Paid",
-            min_value=0.01
-        )
-
+        amount = st.number_input("Amount Paid", min_value=0.01)
 
         payment_method = st.selectbox(
-            "Payment Method",
-            [
-                "Mobile Money",
-                "Bank Transfer",
-                "Cash"
-            ]
+            "Payment Method", ["Mobile Money", "Bank Transfer", "Cash"]
         )
 
+        deadline = st.date_input("Payment Deadline")
 
-        deadline = st.date_input(
-            "Payment Deadline"
-        )
-
-
-        if st.button(
-            "Submit Payment",
-            use_container_width=True
-        ):
-
+        if st.button("Submit Payment", use_container_width=True):
             if not payment_id.strip():
-
-                st.warning(
-                    "Please enter a Payment ID."
-                )
-
+                st.warning("Please enter a Payment ID.")
 
             elif amount > current_balance:
-
-                st.warning(
-                    "Payment cannot be greater than the remaining balance."
-                )
-
+                st.warning("Payment cannot be greater than the remaining balance.")
 
             else:
+                balance = current_balance - amount
 
-                balance = (
-                    current_balance
-                    - amount
-                )
-
-
-                payment_status = (
-                    "Paid"
-                    if balance == 0
-                    else "Pending"
-                )
-
+                payment_status = "Paid" if balance == 0 else "Pending"
 
                 try:
-
                     cursor.execute(
                         """
                         INSERT INTO Payment
@@ -472,28 +343,21 @@ elif menu == "Make Payment":
                             payment_method,
                             payment_status,
                             balance,
-                            deadline
-                        )
+                            deadline,
+                        ),
                     )
 
-
                     conn.commit()
-
 
                     st.success(
                         f"Payment {payment_id} recorded successfully. "
                         f"Remaining Balance: GHS {balance:.2f}"
                     )
 
-
                 except Exception as e:
-
                     conn.rollback()
 
-                    st.error(
-                        f"Could not record payment: {e}"
-                    )
-
+                    st.error(f"Could not record payment: {e}")
 
     cursor.close()
     conn.close()
@@ -504,17 +368,12 @@ elif menu == "Make Payment":
 # =====================================================
 
 elif menu == "My Payments":
-
     st.header("Payment History")
 
-    st.caption(
-        "View all payment records associated with your account."
-    )
-
+    st.caption("View all payment records associated with your account.")
 
     conn = get_connection()
     cursor = conn.cursor()
-
 
     cursor.execute(
         """
@@ -537,19 +396,15 @@ elif menu == "My Payments":
             Payment_Date DESC,
             PaymentID DESC
         """,
-        (student_id,)
+        (student_id,),
     )
 
-
     payments = cursor.fetchall()
-
 
     cursor.close()
     conn.close()
 
-
     if payments:
-
         df = pd.DataFrame(
             payments,
             columns=[
@@ -560,23 +415,14 @@ elif menu == "My Payments":
                 "Payment Method",
                 "Status",
                 "Balance Due",
-                "Deadline"
-            ]
+                "Deadline",
+            ],
         )
 
-
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True
-        )
-
+        st.dataframe(df, use_container_width=True, hide_index=True)
 
     else:
-
-        st.info(
-            "No payment records found."
-        )
+        st.info("No payment records found.")
 
 
 # =====================================================
@@ -584,19 +430,12 @@ elif menu == "My Payments":
 # =====================================================
 
 elif menu == "Send Maintenance Request":
+    st.header("Maintenance Request")
 
-    st.header(
-        "Maintenance Request"
-    )
-
-    st.caption(
-        "Report a maintenance issue in your currently allocated room."
-    )
-
+    st.caption("Report a maintenance issue in your currently allocated room.")
 
     conn = get_connection()
     cursor = conn.cursor()
-
 
     cursor.execute(
         """
@@ -625,64 +464,33 @@ elif menu == "Send Maintenance Request":
             AND
             a.Status = 'Active'
         """,
-        (student_id,)
+        (student_id,),
     )
-
 
     room = cursor.fetchone()
 
-
     if not room:
-
         st.warning(
             "You need an active allocation before submitting a maintenance request."
         )
 
-
     else:
-
-        (
-            room_id,
-            room_number,
-            hostel_name
-        ) = room
-
+        (room_id, room_number, hostel_name) = room
 
         col1, col2 = st.columns(2)
 
+        col1.metric("Hostel", hostel_name)
 
-        col1.metric(
-            "Hostel",
-            hostel_name
-        )
+        col2.metric("Room", room_number)
 
-        col2.metric(
-            "Room",
-            room_number
-        )
+        issue = st.text_area("Describe the maintenance issue")
 
-
-        issue = st.text_area(
-            "Describe the maintenance issue"
-        )
-
-
-        if st.button(
-            "Submit Request",
-            use_container_width=True
-        ):
-
+        if st.button("Submit Request", use_container_width=True):
             if not issue.strip():
-
-                st.warning(
-                    "Please describe the maintenance issue."
-                )
-
+                st.warning("Please describe the maintenance issue.")
 
             else:
-
                 try:
-
                     cursor.execute(
                         """
                         SELECT
@@ -703,16 +511,9 @@ elif menu == "Send Maintenance Request":
                         """
                     )
 
+                    next_number = cursor.fetchone()[0]
 
-                    next_number = (
-                        cursor.fetchone()[0]
-                    )
-
-
-                    maintenance_id = (
-                        f"M{next_number}"
-                    )
-
+                    maintenance_id = f"M{next_number}"
 
                     cursor.execute(
                         """
@@ -729,32 +530,19 @@ elif menu == "Send Maintenance Request":
                         VALUES
                         (?, ?, ?, ?, ?, 'Pending')
                         """,
-                        (
-                            maintenance_id,
-                            room_id,
-                            student_id,
-                            issue,
-                            date.today()
-                        )
+                        (maintenance_id, room_id, student_id, issue, date.today()),
                     )
 
-
                     conn.commit()
-
 
                     st.success(
                         f"Maintenance request {maintenance_id} submitted successfully."
                     )
 
-
                 except Exception as e:
-
                     conn.rollback()
 
-                    st.error(
-                        f"Could not submit request: {e}"
-                    )
-
+                    st.error(f"Could not submit request: {e}")
 
     cursor.close()
     conn.close()
@@ -765,19 +553,12 @@ elif menu == "Send Maintenance Request":
 # =====================================================
 
 elif menu == "My Maintenance":
+    st.header("Maintenance History")
 
-    st.header(
-        "Maintenance History"
-    )
-
-    st.caption(
-        "Track maintenance requests you have submitted."
-    )
-
+    st.caption("Track maintenance requests you have submitted.")
 
     conn = get_connection()
     cursor = conn.cursor()
-
 
     cursor.execute(
         """
@@ -808,19 +589,15 @@ elif menu == "My Maintenance":
         ORDER BY
             m.RequestDate DESC
         """,
-        (student_id,)
+        (student_id,),
     )
 
-
     requests = cursor.fetchall()
-
 
     cursor.close()
     conn.close()
 
-
     if requests:
-
         df = pd.DataFrame(
             requests,
             columns=[
@@ -831,23 +608,14 @@ elif menu == "My Maintenance":
                 "Request Date",
                 "Assigned Staff",
                 "Status",
-                "Date Resolved"
-            ]
+                "Date Resolved",
+            ],
         )
 
-
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True
-        )
-
+        st.dataframe(df, use_container_width=True, hide_index=True)
 
     else:
-
-        st.info(
-            "No maintenance requests found."
-        )
+        st.info("No maintenance requests found.")
 
 
 # =====================================================
@@ -855,17 +623,12 @@ elif menu == "My Maintenance":
 # =====================================================
 
 elif menu == "My Visits":
-
     st.header("My Visits")
 
-    st.caption(
-        "View visitors and visits recorded for you."
-    )
-
+    st.caption("View visitors and visits recorded for you.")
 
     conn = get_connection()
     cursor = conn.cursor()
-
 
     cursor.execute(
         """
@@ -892,19 +655,15 @@ elif menu == "My Visits":
             v.VisitDate DESC,
             v.CheckInTime DESC
         """,
-        (student_id,)
+        (student_id,),
     )
 
-
     visits = cursor.fetchall()
-
 
     cursor.close()
     conn.close()
 
-
     if visits:
-
         df = pd.DataFrame(
             visits,
             columns=[
@@ -915,23 +674,14 @@ elif menu == "My Visits":
                 "Visitor Status",
                 "Visit Date",
                 "Check-In",
-                "Check-Out"
-            ]
+                "Check-Out",
+            ],
         )
 
-
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True
-        )
-
+        st.dataframe(df, use_container_width=True, hide_index=True)
 
     else:
-
-        st.info(
-            "You do not have any recorded visits."
-        )
+        st.info("You do not have any recorded visits.")
 
 
 # =====================================================
@@ -941,11 +691,7 @@ elif menu == "My Visits":
 st.sidebar.divider()
 
 
-if st.sidebar.button(
-    "Logout",
-    use_container_width=True
-):
-
+if st.sidebar.button("Logout", use_container_width=True):
     st.session_state.clear()
 
-    st.switch_page("app.py")
+    st.switch_page("Dashboard.py")

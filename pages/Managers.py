@@ -9,10 +9,7 @@ from datetime import date, timedelta
 # PAGE CONFIGURATION
 # =====================================================
 
-st.set_page_config(
-    page_title="Manager Dashboard",
-    layout="wide"
-)
+st.set_page_config(page_title="Manager Dashboard", layout="wide")
 
 
 # =====================================================
@@ -55,7 +52,7 @@ st.markdown(
 
     </style>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
 
@@ -86,9 +83,7 @@ manager_id = st.session_state.user_id
 
 st.title("Manager Dashboard")
 
-st.caption(
-    "Manage hostel allocations, inspections, maintenance, visitors and reports."
-)
+st.caption("Manage hostel allocations, inspections, maintenance, visitors and reports.")
 
 
 # =====================================================
@@ -111,16 +106,12 @@ menu_items = [
     "Visitors",
     "Vacancy",
     "Reports",
-    "Advanced Queries"
+    "Advanced Queries",
 ]
 
 
 for item in menu_items:
-
-    if st.sidebar.button(
-        item,
-        use_container_width=True
-    ):
+    if st.sidebar.button(item, use_container_width=True):
         st.session_state.manager_menu = item
 
 
@@ -132,20 +123,16 @@ menu = st.session_state.manager_menu
 # =====================================================
 
 if menu == "Dashboard":
-
     st.header("Overview")
 
     conn = get_connection()
     cursor = conn.cursor()
 
-
     cursor.execute("SELECT COUNT(*) FROM Student")
     students = cursor.fetchone()[0]
 
-
     cursor.execute("SELECT COUNT(*) FROM Room")
     rooms = cursor.fetchone()[0]
-
 
     cursor.execute(
         """
@@ -157,7 +144,6 @@ if menu == "Dashboard":
 
     allocations = cursor.fetchone()[0]
 
-
     cursor.execute(
         """
         SELECT COUNT(*)
@@ -168,49 +154,31 @@ if menu == "Dashboard":
 
     vacant_beds = cursor.fetchone()[0]
 
-
     cursor.close()
     conn.close()
 
-
     col1, col2, col3, col4 = st.columns(4)
-
 
     col1.metric("Students", students)
 
     col2.metric("Rooms", rooms)
 
-    col3.metric(
-        "Active Allocations",
-        allocations
-    )
+    col3.metric("Active Allocations", allocations)
 
-    col4.metric(
-        "Vacant Beds",
-        vacant_beds
-    )
-
+    col4.metric("Vacant Beds", vacant_beds)
 
     st.divider()
 
     st.subheader("Database Backup")
 
-
     if st.button("Create Backup"):
-
         try:
-
             filename = create_backup()
 
-            st.success(
-                f"Backup created: {filename}"
-            )
+            st.success(f"Backup created: {filename}")
 
         except Exception as e:
-
-            st.error(
-                f"Backup failed: {e}"
-            )
+            st.error(f"Backup failed: {e}")
 
 
 # =====================================================
@@ -218,33 +186,21 @@ if menu == "Dashboard":
 # =====================================================
 
 elif menu == "Allocations":
-
     st.header("Student Allocations")
 
-    st.caption(
-        "Assign hostel beds or remove existing allocations."
-    )
-
+    st.caption("Assign hostel beds or remove existing allocations.")
 
     action = st.radio(
-        "Action",
-        [
-            "Give Allocation",
-            "Remove Allocation"
-        ],
-        horizontal=True
+        "Action", ["Give Allocation", "Remove Allocation"], horizontal=True
     )
-
 
     # -------------------------------------------------
     # GIVE ALLOCATION
     # -------------------------------------------------
 
     if action == "Give Allocation":
-
         conn = get_connection()
         cursor = conn.cursor()
-
 
         cursor.execute(
             """
@@ -260,36 +216,16 @@ elif menu == "Allocations":
             """
         )
 
-
         students = cursor.fetchall()
 
-
         student_options = {
-            f"{sid} - {first} {last}":
-            (sid, gender)
-
-            for sid,
-                first,
-                last,
-                gender
-            in students
+            f"{sid} - {first} {last}": (sid, gender)
+            for sid, first, last, gender in students
         }
 
+        student_choice = st.selectbox("Student", list(student_options.keys()))
 
-        student_choice = st.selectbox(
-            "Student",
-            list(
-                student_options.keys()
-            )
-        )
-
-
-        student_id, gender = (
-            student_options[
-                student_choice
-            ]
-        )
-
+        student_id, gender = student_options[student_choice]
 
         cursor.execute(
             """
@@ -319,53 +255,23 @@ elif menu == "Allocations":
                 h.HostelName,
                 r.RoomNumber
             """,
-            (gender,)
+            (gender,),
         )
-
 
         bed_rows = cursor.fetchall()
 
-
         bed_options = {
-            (
-                f"{bed_id} | "
-                f"{hostel} | "
-                f"Room {room} | "
-                f"Bed {label}"
-            ):
-            bed_id
-
-            for bed_id,
-                hostel,
-                room,
-                label
-            in bed_rows
+            (f"{bed_id} | {hostel} | Room {room} | Bed {label}"): bed_id
+            for bed_id, hostel, room, label in bed_rows
         }
 
-
         if not bed_options:
-
-            st.warning(
-                "No suitable vacant beds available."
-            )
-
+            st.warning("No suitable vacant beds available.")
 
         else:
+            selected_bed = st.selectbox("Available Bed", list(bed_options.keys()))
 
-            selected_bed = st.selectbox(
-                "Available Bed",
-                list(
-                    bed_options.keys()
-                )
-            )
-
-
-            bed_id = (
-                bed_options[
-                    selected_bed
-                ]
-            )
-
+            bed_id = bed_options[selected_bed]
 
             cursor.execute(
                 """
@@ -375,40 +281,19 @@ elif menu == "Allocations":
                 """
             )
 
+            semesters = [row[0] for row in cursor.fetchall()]
 
-            semesters = [
-                row[0]
-                for row
-                in cursor.fetchall()
-            ]
+            semester_id = st.selectbox("Semester", semesters)
 
-
-            semester_id = st.selectbox(
-                "Semester",
-                semesters
-            )
-
-
-            start_date = st.date_input(
-                "Start Date"
-            )
-
+            start_date = st.date_input("Start Date")
 
             end_date = st.date_input(
-                "End Date",
-                value=(
-                    start_date
-                    + timedelta(days=90)
-                )
+                "End Date", value=(start_date + timedelta(days=90))
             )
 
-
             if st.button("Create Allocation"):
-
                 try:
-
                     conn.autocommit = False
-
 
                     cursor.execute(
                         """
@@ -420,24 +305,15 @@ elif menu == "Allocations":
 
                           AND Status = 'Active'
                         """,
-                        (student_id,)
+                        (student_id,),
                     )
 
-
-                    existing = (
-                        cursor.fetchone()[0]
-                    )
-
+                    existing = cursor.fetchone()[0]
 
                     if existing > 0:
-
-                        st.error(
-                            "Student already has an active allocation."
-                        )
-
+                        st.error("Student already has an active allocation.")
 
                     else:
-
                         cursor.execute(
                             """
                             SELECT
@@ -458,19 +334,11 @@ elif menu == "Allocations":
                             """
                         )
 
+                        number = cursor.fetchone()[0]
 
-                        number = (
-                            cursor.fetchone()[0]
-                        )
-
-
-                        allocation_id = (
-                            f"A{number:05d}"
-                        )
-
+                        allocation_id = f"A{number:05d}"
 
                         today = date.today()
-
 
                         cursor.execute(
                             """
@@ -503,10 +371,9 @@ elif menu == "Allocations":
                                 end_date,
                                 today,
                                 today + timedelta(days=7),
-                                today
-                            )
+                                today,
+                            ),
                         )
-
 
                         cursor.execute(
                             """
@@ -514,9 +381,8 @@ elif menu == "Allocations":
                             SET Status = 'Occupied'
                             WHERE BedID = ?
                             """,
-                            (bed_id,)
+                            (bed_id,),
                         )
-
 
                         cursor.execute(
                             """
@@ -524,14 +390,10 @@ elif menu == "Allocations":
                             FROM Bed
                             WHERE BedID = ?
                             """,
-                            (bed_id,)
+                            (bed_id,),
                         )
 
-
-                        room_id = (
-                            cursor.fetchone()[0]
-                        )
-
+                        room_id = cursor.fetchone()[0]
 
                         cursor.execute(
                             """
@@ -551,43 +413,28 @@ elif menu == "Allocations":
 
                             WHERE RoomID = ?
                             """,
-                            (
-                                room_id,
-                                room_id
-                            )
+                            (room_id, room_id),
                         )
-
 
                         conn.commit()
 
-
-                        st.success(
-                            f"Allocation {allocation_id} created successfully."
-                        )
-
+                        st.success(f"Allocation {allocation_id} created successfully.")
 
                 except Exception as e:
-
                     conn.rollback()
 
-                    st.error(
-                        f"Allocation failed: {e}"
-                    )
-
+                    st.error(f"Allocation failed: {e}")
 
         cursor.close()
         conn.close()
-
 
     # -------------------------------------------------
     # REMOVE ALLOCATION
     # -------------------------------------------------
 
     else:
-
         conn = get_connection()
         cursor = conn.cursor()
-
 
         cursor.execute(
             """
@@ -616,61 +463,26 @@ elif menu == "Allocations":
             """
         )
 
-
         rows = cursor.fetchall()
 
-
         allocation_options = {
-            (
-                f"{allocation_id} | "
-                f"{student_id} | "
-                f"{name}"
-            ):
-            (
-                allocation_id,
-                bed_id
-            )
-
-            for allocation_id,
-                student_id,
-                name,
-                bed_id
-            in rows
+            (f"{allocation_id} | {student_id} | {name}"): (allocation_id, bed_id)
+            for allocation_id, student_id, name, bed_id in rows
         }
 
-
         if not allocation_options:
-
-            st.info(
-                "No active allocations."
-            )
-
+            st.info("No active allocations.")
 
         else:
-
             selected = st.selectbox(
-                "Active Allocation",
-                list(
-                    allocation_options.keys()
-                )
+                "Active Allocation", list(allocation_options.keys())
             )
 
+            allocation_id, bed_id = allocation_options[selected]
 
-            allocation_id, bed_id = (
-                allocation_options[
-                    selected
-                ]
-            )
-
-
-            if st.button(
-                "Remove Allocation"
-            ):
-
+            if st.button("Remove Allocation"):
                 try:
-
                     conn.autocommit = False
-
 
                     cursor.execute(
                         """
@@ -680,9 +492,8 @@ elif menu == "Allocations":
 
                         WHERE AllocationID = ?
                         """,
-                        (allocation_id,)
+                        (allocation_id,),
                     )
-
 
                     cursor.execute(
                         """
@@ -692,9 +503,8 @@ elif menu == "Allocations":
 
                         WHERE BedID = ?
                         """,
-                        (bed_id,)
+                        (bed_id,),
                     )
-
 
                     cursor.execute(
                         """
@@ -704,14 +514,10 @@ elif menu == "Allocations":
 
                         WHERE BedID = ?
                         """,
-                        (bed_id,)
+                        (bed_id,),
                     )
 
-
-                    room_id = (
-                        cursor.fetchone()[0]
-                    )
-
+                    room_id = cursor.fetchone()[0]
 
                     cursor.execute(
                         """
@@ -731,29 +537,17 @@ elif menu == "Allocations":
 
                         WHERE RoomID = ?
                         """,
-                        (
-                            room_id,
-                            room_id
-                        )
+                        (room_id, room_id),
                     )
-
 
                     conn.commit()
 
-
-                    st.success(
-                        "Allocation changed to Inactive."
-                    )
-
+                    st.success("Allocation changed to Inactive.")
 
                 except Exception as e:
-
                     conn.rollback()
 
-                    st.error(
-                        f"Could not remove allocation: {e}"
-                    )
-
+                    st.error(f"Could not remove allocation: {e}")
 
         cursor.close()
         conn.close()
@@ -764,30 +558,18 @@ elif menu == "Allocations":
 # =====================================================
 
 elif menu == "Inspections":
-
     st.header("Inspection Management")
 
-    st.caption(
-        "View, add and update room inspection records."
-    )
-
+    st.caption("View, add and update room inspection records.")
 
     action = st.selectbox(
-        "Action",
-        [
-            "View Inspections",
-            "Add Inspection",
-            "Update Inspection"
-        ]
+        "Action", ["View Inspections", "Add Inspection", "Update Inspection"]
     )
-
 
     conn = get_connection()
     cursor = conn.cursor()
 
-
     if action == "View Inspections":
-
         cursor.execute(
             """
             SELECT
@@ -805,9 +587,7 @@ elif menu == "Inspections":
             """
         )
 
-
         rows = cursor.fetchall()
-
 
         df = pd.DataFrame(
             rows,
@@ -817,20 +597,13 @@ elif menu == "Inspections":
                 "Manager ID",
                 "Inspection Date",
                 "Condition",
-                "Remarks"
-            ]
+                "Remarks",
+            ],
         )
 
-
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True
-        )
-
+        st.dataframe(df, use_container_width=True, hide_index=True)
 
     elif action == "Add Inspection":
-
         cursor.execute(
             """
             SELECT RoomID
@@ -839,44 +612,17 @@ elif menu == "Inspections":
             """
         )
 
+        rooms = [row[0] for row in cursor.fetchall()]
 
-        rooms = [
-            row[0]
-            for row
-            in cursor.fetchall()
-        ]
+        room_id = st.selectbox("Room", rooms)
 
+        condition = st.selectbox("Condition", ["Good", "Fair", "Poor"])
 
-        room_id = st.selectbox(
-            "Room",
-            rooms
-        )
+        remarks = st.text_area("Remarks")
 
+        inspection_date = st.date_input("Inspection Date")
 
-        condition = st.selectbox(
-            "Condition",
-            [
-                "Good",
-                "Fair",
-                "Poor"
-            ]
-        )
-
-
-        remarks = st.text_area(
-            "Remarks"
-        )
-
-
-        inspection_date = st.date_input(
-            "Inspection Date"
-        )
-
-
-        if st.button(
-            "Add Inspection"
-        ):
-
+        if st.button("Add Inspection"):
             cursor.execute(
                 """
                 SELECT
@@ -897,16 +643,9 @@ elif menu == "Inspections":
                 """
             )
 
+            number = cursor.fetchone()[0]
 
-            number = (
-                cursor.fetchone()[0]
-            )
-
-
-            inspection_id = (
-                f"I{number}"
-            )
-
+            inspection_id = f"I{number}"
 
             cursor.execute(
                 """
@@ -928,21 +667,15 @@ elif menu == "Inspections":
                     manager_id,
                     inspection_date,
                     condition,
-                    remarks
-                )
+                    remarks,
+                ),
             )
-
 
             conn.commit()
 
-
-            st.success(
-                f"Inspection {inspection_id} added."
-            )
-
+            st.success(f"Inspection {inspection_id} added.")
 
     else:
-
         cursor.execute(
             """
             SELECT InspectionID
@@ -951,39 +684,15 @@ elif menu == "Inspections":
             """
         )
 
+        inspection_ids = [row[0] for row in cursor.fetchall()]
 
-        inspection_ids = [
-            row[0]
-            for row
-            in cursor.fetchall()
-        ]
+        inspection_id = st.selectbox("Inspection", inspection_ids)
 
+        condition = st.selectbox("New Condition", ["Good", "Fair", "Poor"])
 
-        inspection_id = st.selectbox(
-            "Inspection",
-            inspection_ids
-        )
+        remarks = st.text_area("Updated Remarks")
 
-
-        condition = st.selectbox(
-            "New Condition",
-            [
-                "Good",
-                "Fair",
-                "Poor"
-            ]
-        )
-
-
-        remarks = st.text_area(
-            "Updated Remarks"
-        )
-
-
-        if st.button(
-            "Update Inspection"
-        ):
-
+        if st.button("Update Inspection"):
             cursor.execute(
                 """
                 UPDATE Inspection
@@ -993,21 +702,12 @@ elif menu == "Inspections":
 
                 WHERE InspectionID = ?
                 """,
-                (
-                    condition,
-                    remarks,
-                    inspection_id
-                )
+                (condition, remarks, inspection_id),
             )
-
 
             conn.commit()
 
-
-            st.success(
-                "Inspection updated successfully."
-            )
-
+            st.success("Inspection updated successfully.")
 
     cursor.close()
     conn.close()
@@ -1018,32 +718,18 @@ elif menu == "Inspections":
 # =====================================================
 
 elif menu == "Maintenance":
+    st.header("Maintenance Management")
 
-    st.header(
-        "Maintenance Management"
-    )
-
-    st.caption(
-        "View requests, assign maintenance staff and update request status."
-    )
-
+    st.caption("View requests, assign maintenance staff and update request status.")
 
     action = st.selectbox(
-        "Action",
-        [
-            "View Maintenance",
-            "Add Maintenance",
-            "Update Maintenance"
-        ]
+        "Action", ["View Maintenance", "Add Maintenance", "Update Maintenance"]
     )
-
 
     conn = get_connection()
     cursor = conn.cursor()
 
-
     if action == "View Maintenance":
-
         cursor.execute(
             """
             SELECT
@@ -1064,9 +750,7 @@ elif menu == "Maintenance":
             """
         )
 
-
         rows = cursor.fetchall()
-
 
         df = pd.DataFrame(
             rows,
@@ -1079,20 +763,13 @@ elif menu == "Maintenance":
                 "Issue",
                 "Request Date",
                 "Status",
-                "Date Resolved"
-            ]
+                "Date Resolved",
+            ],
         )
 
-
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True
-        )
-
+        st.dataframe(df, use_container_width=True, hide_index=True)
 
     elif action == "Add Maintenance":
-
         cursor.execute(
             """
             SELECT RoomID
@@ -1101,38 +778,17 @@ elif menu == "Maintenance":
             """
         )
 
+        rooms = [row[0] for row in cursor.fetchall()]
 
-        rooms = [
-            row[0]
-            for row
-            in cursor.fetchall()
-        ]
+        room_id = st.selectbox("Room", rooms)
 
+        issue = st.text_area("Issue Description")
 
-        room_id = st.selectbox(
-            "Room",
-            rooms
-        )
-
-
-        issue = st.text_area(
-            "Issue Description"
-        )
-
-
-        if st.button(
-            "Add Maintenance Record"
-        ):
-
+        if st.button("Add Maintenance Record"):
             if not issue.strip():
-
-                st.warning(
-                    "Please enter an issue description."
-                )
-
+                st.warning("Please enter an issue description.")
 
             else:
-
                 cursor.execute(
                     """
                     SELECT
@@ -1153,16 +809,9 @@ elif menu == "Maintenance":
                     """
                 )
 
+                number = cursor.fetchone()[0]
 
-                number = (
-                    cursor.fetchone()[0]
-                )
-
-
-                maintenance_id = (
-                    f"M{number}"
-                )
-
+                maintenance_id = f"M{number}"
 
                 cursor.execute(
                     """
@@ -1179,26 +828,14 @@ elif menu == "Maintenance":
                     VALUES
                     (?, ?, ?, ?, ?, 'Pending')
                     """,
-                    (
-                        maintenance_id,
-                        room_id,
-                        manager_id,
-                        issue,
-                        date.today()
-                    )
+                    (maintenance_id, room_id, manager_id, issue, date.today()),
                 )
-
 
                 conn.commit()
 
-
-                st.success(
-                    f"Maintenance record {maintenance_id} added."
-                )
-
+                st.success(f"Maintenance record {maintenance_id} added.")
 
     else:
-
         cursor.execute(
             """
             SELECT MaintenanceID
@@ -1207,19 +844,9 @@ elif menu == "Maintenance":
             """
         )
 
+        maintenance_ids = [row[0] for row in cursor.fetchall()]
 
-        maintenance_ids = [
-            row[0]
-            for row
-            in cursor.fetchall()
-        ]
-
-
-        maintenance_id = st.selectbox(
-            "Maintenance Request",
-            maintenance_ids
-        )
-
+        maintenance_id = st.selectbox("Maintenance Request", maintenance_ids)
 
         cursor.execute(
             """
@@ -1245,52 +872,20 @@ elif menu == "Maintenance":
             """
         )
 
-
         staff_rows = cursor.fetchall()
 
-
         staff_options = {
-            f"{staff_id} - {name}":
-            staff_id
-
-            for staff_id, name
-            in staff_rows
+            f"{staff_id} - {name}": staff_id for staff_id, name in staff_rows
         }
 
+        selected_staff = st.selectbox("Assign Staff", list(staff_options.keys()))
 
-        selected_staff = st.selectbox(
-            "Assign Staff",
-            list(
-                staff_options.keys()
-            )
-        )
+        status = st.selectbox("Status", ["Pending", "Resolved", "Ok"])
 
+        issue = st.text_area("Issue Description")
 
-        status = st.selectbox(
-            "Status",
-            [
-                "Pending",
-                "Resolved",
-                "Ok"
-            ]
-        )
-
-
-        issue = st.text_area(
-            "Issue Description"
-        )
-
-
-        if st.button(
-            "Update Maintenance"
-        ):
-
-            resolved_date = (
-                date.today()
-                if status == "Resolved"
-                else None
-            )
-
+        if st.button("Update Maintenance"):
+            resolved_date = date.today() if status == "Resolved" else None
 
             cursor.execute(
                 """
@@ -1305,25 +900,18 @@ elif menu == "Maintenance":
                 WHERE MaintenanceID = ?
                 """,
                 (
-                    staff_options[
-                        selected_staff
-                    ],
+                    staff_options[selected_staff],
                     manager_id,
                     issue,
                     status,
                     resolved_date,
-                    maintenance_id
-                )
+                    maintenance_id,
+                ),
             )
-
 
             conn.commit()
 
-
-            st.success(
-                "Maintenance record updated successfully."
-            )
-
+            st.success("Maintenance record updated successfully.")
 
     cursor.close()
     conn.close()
@@ -1334,22 +922,14 @@ elif menu == "Maintenance":
 # =====================================================
 
 elif menu == "Student Payments":
-
     st.header("Student Payments")
 
-    st.caption(
-        "Search and view student payment records."
-    )
-
+    st.caption("Search and view student payment records.")
 
     conn = get_connection()
     cursor = conn.cursor()
 
-
-    search = st.text_input(
-        "Search Student ID"
-    )
-
+    search = st.text_input("Search Student ID")
 
     cursor.execute(
         """
@@ -1381,14 +961,10 @@ elif menu == "Student Payments":
         ORDER BY
             p.Payment_Date DESC
         """,
-        (
-            f"%{search}%",
-        )
+        (f"%{search}%",),
     )
 
-
     rows = cursor.fetchall()
-
 
     df = pd.DataFrame(
         rows,
@@ -1401,17 +977,11 @@ elif menu == "Student Payments":
             "Payment Method",
             "Status",
             "Balance Due",
-            "Deadline"
-        ]
+            "Deadline",
+        ],
     )
 
-
-    st.dataframe(
-        df,
-        use_container_width=True,
-        hide_index=True
-    )
-
+    st.dataframe(df, use_container_width=True, hide_index=True)
 
     cursor.close()
     conn.close()
@@ -1422,13 +992,9 @@ elif menu == "Student Payments":
 # =====================================================
 
 elif menu == "Visitors":
-
     st.header("Visitor Management")
 
-    st.caption(
-        "Manage visitor approvals and hostel visit records."
-    )
-
+    st.caption("Manage visitor approvals and hostel visit records.")
 
     action = st.selectbox(
         "Action",
@@ -1437,17 +1003,14 @@ elif menu == "Visitors":
             "Add Visitor",
             "Approve / Reject Visitor",
             "Record Visit",
-            "View Visits"
-        ]
+            "View Visits",
+        ],
     )
-
 
     conn = get_connection()
     cursor = conn.cursor()
 
-
     if action == "View Visitors":
-
         cursor.execute(
             """
             SELECT
@@ -1463,70 +1026,29 @@ elif menu == "Visitors":
             """
         )
 
-
         rows = cursor.fetchall()
 
-
         df = pd.DataFrame(
-            rows,
-            columns=[
-                "Visitor ID",
-                "Visitor Name",
-                "Phone",
-                "Status"
-            ]
+            rows, columns=["Visitor ID", "Visitor Name", "Phone", "Status"]
         )
 
-
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True
-        )
-
+        st.dataframe(df, use_container_width=True, hide_index=True)
 
     elif action == "Add Visitor":
+        visitor_id = st.text_input("Visitor ID")
 
-        visitor_id = st.text_input(
-            "Visitor ID"
-        )
+        name = st.text_input("Visitor Name")
 
-        name = st.text_input(
-            "Visitor Name"
-        )
+        phone = st.text_input("Phone")
 
-        phone = st.text_input(
-            "Phone"
-        )
+        approval_status = st.selectbox("Approval Status", ["Approved", "Rejected"])
 
-
-        approval_status = st.selectbox(
-            "Approval Status",
-            [
-                "Approved",
-                "Rejected"
-            ]
-        )
-
-
-        if st.button(
-            "Add Visitor"
-        ):
-
-            if (
-                not visitor_id
-                or not name
-            ):
-
-                st.warning(
-                    "Visitor ID and name are required."
-                )
-
+        if st.button("Add Visitor"):
+            if not visitor_id or not name:
+                st.warning("Visitor ID and name are required.")
 
             else:
-
                 try:
-
                     cursor.execute(
                         """
                         INSERT INTO Visitor
@@ -1539,32 +1061,17 @@ elif menu == "Visitors":
 
                         VALUES (?, ?, ?, ?)
                         """,
-                        (
-                            visitor_id,
-                            name,
-                            phone,
-                            approval_status
-                        )
+                        (visitor_id, name, phone, approval_status),
                     )
-
 
                     conn.commit()
 
-
-                    st.success(
-                        "Visitor added successfully."
-                    )
-
+                    st.success("Visitor added successfully.")
 
                 except Exception as e:
-
-                    st.error(
-                        f"Could not add visitor: {e}"
-                    )
-
+                    st.error(f"Could not add visitor: {e}")
 
     elif action == "Approve / Reject Visitor":
-
         cursor.execute(
             """
             SELECT
@@ -1579,45 +1086,18 @@ elif menu == "Visitors":
             """
         )
 
-
         visitors = cursor.fetchall()
 
-
         visitor_options = {
-            (
-                f"{visitor_id} - "
-                f"{name} ({status})"
-            ):
-            visitor_id
-
-            for visitor_id,
-                name,
-                status
-            in visitors
+            (f"{visitor_id} - {name} ({status})"): visitor_id
+            for visitor_id, name, status in visitors
         }
 
+        visitor_choice = st.selectbox("Visitor", list(visitor_options.keys()))
 
-        visitor_choice = st.selectbox(
-            "Visitor",
-            list(
-                visitor_options.keys()
-            )
-        )
+        new_status = st.selectbox("New Status", ["Approved", "Rejected"])
 
-
-        new_status = st.selectbox(
-            "New Status",
-            [
-                "Approved",
-                "Rejected"
-            ]
-        )
-
-
-        if st.button(
-            "Update Visitor"
-        ):
-
+        if st.button("Update Visitor"):
             cursor.execute(
                 """
                 UPDATE Visitor
@@ -1626,25 +1106,14 @@ elif menu == "Visitors":
 
                 WHERE VisitorID = ?
                 """,
-                (
-                    new_status,
-                    visitor_options[
-                        visitor_choice
-                    ]
-                )
+                (new_status, visitor_options[visitor_choice]),
             )
-
 
             conn.commit()
 
-
-            st.success(
-                "Visitor status updated."
-            )
-
+            st.success("Visitor status updated.")
 
     elif action == "Record Visit":
-
         cursor.execute(
             """
             SELECT
@@ -1661,18 +1130,11 @@ elif menu == "Visitors":
             """
         )
 
-
         visitor_rows = cursor.fetchall()
 
-
         visitor_options = {
-            f"{visitor_id} - {name}":
-            visitor_id
-
-            for visitor_id, name
-            in visitor_rows
+            f"{visitor_id} - {name}": visitor_id for visitor_id, name in visitor_rows
         }
-
 
         cursor.execute(
             """
@@ -1698,49 +1160,20 @@ elif menu == "Visitors":
             """
         )
 
-
         student_rows = cursor.fetchall()
 
-
         student_options = {
-            f"{student_id} - {name}":
-            student_id
-
-            for student_id, name
-            in student_rows
+            f"{student_id} - {name}": student_id for student_id, name in student_rows
         }
 
+        if visitor_options and student_options:
+            visitor_choice = st.selectbox("Visitor", list(visitor_options.keys()))
 
-        if (
-            visitor_options
-            and student_options
-        ):
+            student_choice = st.selectbox("Student", list(student_options.keys()))
 
-            visitor_choice = st.selectbox(
-                "Visitor",
-                list(
-                    visitor_options.keys()
-                )
-            )
+            check_in = st.time_input("Check-in Time")
 
-
-            student_choice = st.selectbox(
-                "Student",
-                list(
-                    student_options.keys()
-                )
-            )
-
-
-            check_in = st.time_input(
-                "Check-in Time"
-            )
-
-
-            if st.button(
-                "Record Visit"
-            ):
-
+            if st.button("Record Visit"):
                 cursor.execute(
                     """
                     INSERT INTO Visit
@@ -1754,35 +1187,23 @@ elif menu == "Visitors":
                     VALUES (?, ?, ?, ?)
                     """,
                     (
-                        student_options[
-                            student_choice
-                        ],
-                        visitor_options[
-                            visitor_choice
-                        ],
+                        student_options[student_choice],
+                        visitor_options[visitor_choice],
                         check_in,
-                        date.today()
-                    )
+                        date.today(),
+                    ),
                 )
-
 
                 conn.commit()
 
-
-                st.success(
-                    "Visit recorded successfully."
-                )
-
+                st.success("Visit recorded successfully.")
 
         else:
-
             st.warning(
                 "An approved visitor and active student allocation are required."
             )
 
-
     else:
-
         cursor.execute(
             """
             SELECT
@@ -1803,9 +1224,7 @@ elif menu == "Visitors":
             """
         )
 
-
         rows = cursor.fetchall()
-
 
         df = pd.DataFrame(
             rows,
@@ -1815,17 +1234,11 @@ elif menu == "Visitors":
                 "Student ID",
                 "Visit Date",
                 "Check-In",
-                "Check-Out"
-            ]
+                "Check-Out",
+            ],
         )
 
-
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True
-        )
-
+        st.dataframe(df, use_container_width=True, hide_index=True)
 
     cursor.close()
     conn.close()
@@ -1836,17 +1249,12 @@ elif menu == "Visitors":
 # =====================================================
 
 elif menu == "Vacancy":
-
     st.header("Hostel Vacancy")
 
-    st.caption(
-        "View current hostel capacity and available spaces."
-    )
-
+    st.caption("View current hostel capacity and available spaces.")
 
     conn = get_connection()
     cursor = conn.cursor()
-
 
     cursor.execute(
         """
@@ -1882,27 +1290,13 @@ elif menu == "Vacancy":
         """
     )
 
-
     rows = cursor.fetchall()
 
-
     df = pd.DataFrame(
-        rows,
-        columns=[
-            "Hostel Name",
-            "Capacity",
-            "Occupied",
-            "Vacancies"
-        ]
+        rows, columns=["Hostel Name", "Capacity", "Occupied", "Vacancies"]
     )
 
-
-    st.dataframe(
-        df,
-        use_container_width=True,
-        hide_index=True
-    )
-
+    st.dataframe(df, use_container_width=True, hide_index=True)
 
     cursor.close()
     conn.close()
@@ -1913,13 +1307,9 @@ elif menu == "Vacancy":
 # =====================================================
 
 elif menu == "Reports":
-
     st.header("Reports")
 
-    st.caption(
-        "View summaries generated from current hostel records."
-    )
-
+    st.caption("View summaries generated from current hostel records.")
 
     report = st.selectbox(
         "Select Report",
@@ -1927,17 +1317,14 @@ elif menu == "Reports":
             "Hostel Occupancy",
             "Hostel Vacancy",
             "Outstanding Payments",
-            "Active Allocations"
-        ]
+            "Active Allocations",
+        ],
     )
-
 
     conn = get_connection()
     cursor = conn.cursor()
 
-
     if report == "Hostel Occupancy":
-
         cursor.execute(
             """
             SELECT
@@ -1979,23 +1366,13 @@ elif menu == "Reports":
             """
         )
 
-
         rows = cursor.fetchall()
 
-
         df = pd.DataFrame(
-            rows,
-            columns=[
-                "Hostel",
-                "Capacity",
-                "Occupied",
-                "Occupancy Rate (%)"
-            ]
+            rows, columns=["Hostel", "Capacity", "Occupied", "Occupancy Rate (%)"]
         )
 
-
     elif report == "Hostel Vacancy":
-
         cursor.execute(
             """
             SELECT
@@ -2030,23 +1407,11 @@ elif menu == "Reports":
             """
         )
 
-
         rows = cursor.fetchall()
 
-
-        df = pd.DataFrame(
-            rows,
-            columns=[
-                "Hostel",
-                "Capacity",
-                "Occupied",
-                "Vacancies"
-            ]
-        )
-
+        df = pd.DataFrame(rows, columns=["Hostel", "Capacity", "Occupied", "Vacancies"])
 
     elif report == "Outstanding Payments":
-
         cursor.execute(
             """
             SELECT
@@ -2075,23 +1440,13 @@ elif menu == "Reports":
             """
         )
 
-
         rows = cursor.fetchall()
 
-
         df = pd.DataFrame(
-            rows,
-            columns=[
-                "Student ID",
-                "Student Name",
-                "Balance Due",
-                "Deadline"
-            ]
+            rows, columns=["Student ID", "Student Name", "Balance Due", "Deadline"]
         )
 
-
     else:
-
         cursor.execute(
             """
             SELECT
@@ -2136,9 +1491,7 @@ elif menu == "Reports":
             """
         )
 
-
         rows = cursor.fetchall()
-
 
         df = pd.DataFrame(
             rows,
@@ -2148,17 +1501,11 @@ elif menu == "Reports":
                 "Student Name",
                 "Hostel",
                 "Room",
-                "Bed"
-            ]
+                "Bed",
+            ],
         )
 
-
-    st.dataframe(
-        df,
-        use_container_width=True,
-        hide_index=True
-    )
-
+    st.dataframe(df, use_container_width=True, hide_index=True)
 
     cursor.close()
     conn.close()
@@ -2169,13 +1516,9 @@ elif menu == "Reports":
 # =====================================================
 
 elif menu == "Advanced Queries":
-
     st.header("Advanced Queries")
 
-    st.caption(
-        "Run advanced database queries and view their results."
-    )
-
+    st.caption("Run advanced database queries and view their results.")
 
     query_choice = st.selectbox(
         "Select Query",
@@ -2189,18 +1532,15 @@ elif menu == "Advanced Queries":
             "7. Rooms With Vacant Beds",
             "8. Students With Maintenance Requests",
             "9. Maintenance Workload by Staff",
-            "10. Hostels Above 80% Occupancy"
-        ]
+            "10. Hostels Above 80% Occupancy",
+        ],
     )
-
 
     conn = get_connection()
     cursor = conn.cursor()
 
-
     # QUERY 1
     if query_choice == "1. Current Student Allocations":
-
         cursor.execute(
             """
             SELECT
@@ -2250,9 +1590,7 @@ elif menu == "Advanced Queries":
             """
         )
 
-
         rows = cursor.fetchall()
-
 
         df = pd.DataFrame(
             rows,
@@ -2268,14 +1606,12 @@ elif menu == "Advanced Queries":
                 "Bed",
                 "Start Date",
                 "End Date",
-                "Status"
-            ]
+                "Status",
+            ],
         )
-
 
     # QUERY 2
     elif query_choice == "2. Fully Occupied Rooms":
-
         cursor.execute(
             """
             SELECT
@@ -2304,9 +1640,7 @@ elif menu == "Advanced Queries":
             """
         )
 
-
         rows = cursor.fetchall()
-
 
         df = pd.DataFrame(
             rows,
@@ -2316,14 +1650,12 @@ elif menu == "Advanced Queries":
                 "Capacity",
                 "Current Occupancy",
                 "Block",
-                "Hostel"
-            ]
+                "Hostel",
+            ],
         )
-
 
     # QUERY 3
     elif query_choice == "3. Hostel Occupancy Rates":
-
         cursor.execute(
             """
             SELECT
@@ -2373,9 +1705,7 @@ elif menu == "Advanced Queries":
             """
         )
 
-
         rows = cursor.fetchall()
-
 
         df = pd.DataFrame(
             rows,
@@ -2385,14 +1715,12 @@ elif menu == "Advanced Queries":
                 "Hostel Capacity",
                 "Room Capacity",
                 "Current Occupancy",
-                "Occupancy Rate (%)"
-            ]
+                "Occupancy Rate (%)",
+            ],
         )
-
 
     # QUERY 4
     elif query_choice == "4. Outstanding Balances":
-
         cursor.execute(
             """
             SELECT
@@ -2440,9 +1768,7 @@ elif menu == "Advanced Queries":
             """
         )
 
-
         rows = cursor.fetchall()
-
 
         df = pd.DataFrame(
             rows,
@@ -2453,14 +1779,12 @@ elif menu == "Advanced Queries":
                 "Balance Due",
                 "Deadline",
                 "Payment Status",
-                "Payment Condition"
-            ]
+                "Payment Condition",
+            ],
         )
-
 
     # QUERY 5
     elif query_choice == "5. Allocations Expiring Within 30 Days":
-
         cursor.execute(
             """
             SELECT
@@ -2518,9 +1842,7 @@ elif menu == "Advanced Queries":
             """
         )
 
-
         rows = cursor.fetchall()
-
 
         df = pd.DataFrame(
             rows,
@@ -2531,14 +1853,12 @@ elif menu == "Advanced Queries":
                 "Room",
                 "Bed",
                 "End Date",
-                "Days Remaining"
-            ]
+                "Days Remaining",
+            ],
         )
-
 
     # QUERY 6
     elif query_choice == "6. Rank Hostels by Occupancy":
-
         cursor.execute(
             """
             WITH HostelOccupancy AS
@@ -2605,9 +1925,7 @@ elif menu == "Advanced Queries":
             """
         )
 
-
         rows = cursor.fetchall()
-
 
         df = pd.DataFrame(
             rows,
@@ -2617,14 +1935,12 @@ elif menu == "Advanced Queries":
                 "Total Capacity",
                 "Occupied Beds",
                 "Occupancy Rate (%)",
-                "Rank"
-            ]
+                "Rank",
+            ],
         )
-
 
     # QUERY 7
     elif query_choice == "7. Rooms With Vacant Beds":
-
         cursor.execute(
             """
             SELECT
@@ -2685,9 +2001,7 @@ elif menu == "Advanced Queries":
             """
         )
 
-
         rows = cursor.fetchall()
-
 
         df = pd.DataFrame(
             rows,
@@ -2697,14 +2011,12 @@ elif menu == "Advanced Queries":
                 "Room",
                 "Capacity",
                 "Total Beds",
-                "Vacant Beds"
-            ]
+                "Vacant Beds",
+            ],
         )
-
 
     # QUERY 8
     elif query_choice == "8. Students With Maintenance Requests":
-
         cursor.execute(
             """
             SELECT
@@ -2736,9 +2048,7 @@ elif menu == "Advanced Queries":
             """
         )
 
-
         rows = cursor.fetchall()
-
 
         df = pd.DataFrame(
             rows,
@@ -2750,14 +2060,12 @@ elif menu == "Advanced Queries":
                 "Issue",
                 "Request Date",
                 "Status",
-                "Date Resolved"
-            ]
+                "Date Resolved",
+            ],
         )
-
 
     # QUERY 9
     elif query_choice == "9. Maintenance Workload by Staff":
-
         cursor.execute(
             """
             SELECT
@@ -2818,9 +2126,7 @@ elif menu == "Advanced Queries":
             """
         )
 
-
         rows = cursor.fetchall()
-
 
         df = pd.DataFrame(
             rows,
@@ -2830,14 +2136,12 @@ elif menu == "Advanced Queries":
                 "Email",
                 "Total Requests",
                 "Resolved",
-                "Outstanding"
-            ]
+                "Outstanding",
+            ],
         )
-
 
     # QUERY 10
     else:
-
         cursor.execute(
             """
             SELECT
@@ -2897,9 +2201,7 @@ elif menu == "Advanced Queries":
             """
         )
 
-
         rows = cursor.fetchall()
-
 
         df = pd.DataFrame(
             rows,
@@ -2908,26 +2210,15 @@ elif menu == "Advanced Queries":
                 "Hostel",
                 "Total Capacity",
                 "Occupied Beds",
-                "Occupancy (%)"
-            ]
+                "Occupancy (%)",
+            ],
         )
-
 
     if df.empty:
-
-        st.info(
-            "No records matched this query."
-        )
-
+        st.info("No records matched this query.")
 
     else:
-
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True
-        )
-
+        st.dataframe(df, use_container_width=True, hide_index=True)
 
     cursor.close()
     conn.close()
@@ -2940,11 +2231,7 @@ elif menu == "Advanced Queries":
 st.sidebar.divider()
 
 
-if st.sidebar.button(
-    "Logout",
-    use_container_width=True
-):
-
+if st.sidebar.button("Logout", use_container_width=True):
     st.session_state.clear()
 
-    st.switch_page("app.py")
+    st.switch_page("Dashboard.py")
