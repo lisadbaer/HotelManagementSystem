@@ -1,286 +1,220 @@
--- QUERY 1: Show students with their complete room and hostel allocation
+DELIMITER //
 
-SELECT
-    s.StudentID,
-    CONCAT(s.FirstName, ' ', s.LastName) AS StudentName,
-    s.Gender,
-    s.Programme,
-    s.Year,
-    h.HostelName,
-    b.BlockName,
-    r.RoomNumber,
-    bed.BedLabel,
-    a.AllocationStartDate,
-    a.AllocationEndDate,
-    a.Status AS AllocationStatus
-FROM Student s
-JOIN Allocation a
-    ON s.StudentID = a.StudentID
-JOIN Bed bed
-    ON a.BedID = bed.BedID
-JOIN Room r
-    ON bed.RoomID = r.RoomID
-JOIN Block b
-    ON r.BlockID = b.BlockID
-JOIN Hostel h
-    ON b.HostelID = h.HostelID
-WHERE a.Status = 'Active'
-ORDER BY h.HostelName, b.BlockName, r.RoomNumber;
-
-
--- QUERY 2: Find rooms that are fully occupied
-
-SELECT
-    r.RoomID,
-    r.RoomNumber,
-    r.Capacity,
-    r.CurrentOccupancy,
-    b.BlockName,
-    h.HostelName
-FROM Room r
-JOIN Block b
-    ON r.BlockID = b.BlockID
-JOIN Hostel h
-    ON b.HostelID = h.HostelID
-WHERE r.CurrentOccupancy >= r.Capacity
-ORDER BY h.HostelName, b.BlockName, r.RoomNumber;
-
-
--- QUERY 3: Calculate occupancy rate for each hostel
-
-SELECT
-    h.HostelID,
-    h.HostelName,
-    h.Capacity,
-    COALESCE(SUM(r.Capacity), 0) AS TotalBedCapacity,
-    COALESCE(SUM(r.CurrentOccupancy), 0) AS CurrentOccupancy,
-    ROUND(
-        COALESCE(SUM(r.CurrentOccupancy), 0)
-        / NULLIF(SUM(r.Capacity), 0) * 100,
-        2
-    ) AS OccupancyRate
-FROM Hostel h
-LEFT JOIN Block b
-    ON h.HostelID = b.HostelID
-LEFT JOIN Room r
-    ON b.BlockID = r.BlockID
-GROUP BY
-    h.HostelID,
-    h.HostelName,
-    h.Capacity
-ORDER BY OccupancyRate DESC;
-
-
--- QUERY 4: Find students with outstanding balances
-
-SELECT
-    s.StudentID,
-    CONCAT(s.FirstName, ' ', s.LastName) AS StudentName,
-    p.Amount_paid,
-    p.Balance_Due,
-    p.Deadline,
-    p.Payment_Status,
-    CASE
-        WHEN p.Deadline < CURDATE()
-             AND p.Balance_Due > 0
-            THEN 'OVERDUE'
-        WHEN p.Balance_Due > 0
-            THEN 'PENDING'
-        ELSE 'PAID'
-    END AS PaymentCondition
-FROM Student s
-JOIN Payment p
-    ON s.StudentID = p.StudentID
-WHERE p.Balance_Due > 0
-ORDER BY p.Deadline ASC;
-
-
--- QUERY 5: Show active allocations and days remaining
--- Changed from "expires within 30 days" because that returned no rows
-
-SELECT
-    s.StudentID,
-    CONCAT(s.FirstName, ' ', s.LastName) AS StudentName,
-    h.HostelName,
-    r.RoomNumber,
-    bed.BedLabel,
-    a.AllocationEndDate,
-    DATEDIFF(
-        a.AllocationEndDate,
-        CURDATE()
-    ) AS DaysRemaining
-FROM Student s
-JOIN Allocation a
-    ON s.StudentID = a.StudentID
-JOIN Bed bed
-    ON a.BedID = bed.BedID
-JOIN Room r
-    ON bed.RoomID = r.RoomID
-JOIN Block b
-    ON r.BlockID = b.BlockID
-JOIN Hostel h
-    ON b.HostelID = h.HostelID
-WHERE a.Status = 'Active'
-ORDER BY a.AllocationEndDate;
-
-
--- QUERY 6: Rank hostels by occupancy rate
-
-WITH HostelOccupancy AS (
-    SELECT
-        h.HostelID,
-        h.HostelName,
-        COALESCE(SUM(r.Capacity), 0) AS TotalCapacity,
-        COALESCE(SUM(r.CurrentOccupancy), 0) AS OccupiedBeds
-    FROM Hostel h
-    LEFT JOIN Block b
-        ON h.HostelID = b.HostelID
-    LEFT JOIN Room r
-        ON b.BlockID = r.BlockID
-    GROUP BY
-        h.HostelID,
-        h.HostelName
+CREATE PROCEDURE sp_AllocateBed(
+    IN p_AllocationID VARCHAR(6),
+    IN p_StudentID VARCHAR(8),
+    IN p_BedID VARCHAR(10),
+    IN p_SemesterID VARCHAR(10),
+    IN p_StartDate DATE,
+    IN p_EndDate DATE
 )
+BEGIN
 
-SELECT
-    HostelID,
-    HostelName,
-    TotalCapacity,
-    OccupiedBeds,
-    ROUND(
-        OccupiedBeds
-        / NULLIF(TotalCapacity, 0) * 100,
-        2
-    ) AS OccupancyRate,
-    RANK() OVER (
-        ORDER BY
-            OccupiedBeds
-            / NULLIF(TotalCapacity, 0) DESC
-    ) AS OccupancyRank
-FROM HostelOccupancy
-ORDER BY OccupancyRank;
+    DECLARE v_BedStatus VARCHAR(20);
+    DECLARE v_ExistingAllocation INT DEFAULT 0;
 
 
--- QUERY 7: Find rooms with vacant beds
+    SELECT Status
+    INTO v_BedStatus
+    FROM Bed
+    WHERE BedID = p_BedID;
 
-SELECT
-    h.HostelName,
-    b.BlockName,
-    r.RoomNumber,
-    r.Capacity,
-    COUNT(bed.BedID) AS TotalBeds,
-    SUM(
+
+    IF v_BedStatus IS NULL THEN
+
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Bed does not exist';
+
+    ELSEIF v_BedStatus <> 'Vacant' THEN
+
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Bed is not available';
+
+    END IF;
+
+
+    SELECT COUNT(*)
+    INTO v_ExistingAllocation
+    FROM Allocation
+    WHERE StudentID = p_StudentID
+      AND Status = 'Active';
+
+
+    IF v_ExistingAllocation > 0 THEN
+
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT =
+        'Student already has an active allocation';
+
+    END IF;
+
+
+    INSERT INTO Allocation
+    (
+        AllocationID,
+        StudentID,
+        BedID,
+        SemesterID,
+        AllocationStartDate,
+        AllocationEndDate,
+        OfferSentDate,
+        AcceptanceDeadline,
+        AcceptedDate,
+        Status
+    )
+    VALUES
+    (
+        p_AllocationID,
+        p_StudentID,
+        p_BedID,
+        p_SemesterID,
+        p_StartDate,
+        p_EndDate,
+        CURDATE(),
+        DATE_ADD(CURDATE(), INTERVAL 7 DAY),
+        CURDATE(),
+        'Active'
+    );
+
+END //
+
+DELIMITER ;
+
+
+
+
+DELIMITER //
+
+CREATE PROCEDURE sp_ProcessPayment(
+    IN p_PaymentID VARCHAR(10),
+    IN p_AllocationID VARCHAR(6),
+    IN p_StudentID VARCHAR(8),
+    IN p_Amount DECIMAL(10,2),
+    IN p_PaymentMethod VARCHAR(20),
+    IN p_TotalAmount DECIMAL(10,2),
+    IN p_Deadline DATE
+)
+BEGIN
+
+    DECLARE v_Balance DECIMAL(10,2);
+
+
+    IF p_Amount <= 0 THEN
+
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT =
+        'Payment amount must be greater than zero';
+
+    END IF;
+
+
+    IF p_Amount > p_TotalAmount THEN
+
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT =
+        'Payment cannot exceed the total amount due';
+
+    END IF;
+
+
+    SET v_Balance =
+        p_TotalAmount - p_Amount;
+
+
+    INSERT INTO Payment
+    (
+        PaymentID,
+        AllocationID,
+        StudentID,
+        Amount_paid,
+        Payment_Date,
+        Payment_Method,
+        Payment_Status,
+        Balance_Due,
+        Deadline
+    )
+    VALUES
+    (
+        p_PaymentID,
+        p_AllocationID,
+        p_StudentID,
+        p_Amount,
+        CURDATE(),
+        p_PaymentMethod,
+
         CASE
-            WHEN bed.Status = 'Vacant'
-                THEN 1
-            ELSE 0
-        END
-    ) AS VacantBeds
-FROM Hostel h
-JOIN Block b
-    ON h.HostelID = b.HostelID
-JOIN Room r
-    ON b.BlockID = r.BlockID
-JOIN Bed bed
-    ON r.RoomID = bed.RoomID
-GROUP BY
-    h.HostelName,
-    b.BlockName,
-    r.RoomNumber,
-    r.Capacity
-HAVING VacantBeds > 0
-ORDER BY VacantBeds DESC;
+            WHEN v_Balance = 0
+            THEN 'Paid'
+
+            ELSE 'Pending'
+        END,
+
+        v_Balance,
+        p_Deadline
+    );
+
+END //
+
+DELIMITER ;
 
 
--- QUERY 8: Find students who submitted maintenance requests
-
-SELECT
-    s.StudentID,
-    CONCAT(s.FirstName, ' ', s.LastName) AS StudentName,
-    m.MaintenanceID,
-    r.RoomNumber,
-    m.IssueDescription,
-    m.RequestDate,
-    m.Status,
-    m.DateResolved
-FROM Student s
-JOIN Maintenance m
-    ON s.StudentID = m.StudentID
-JOIN Room r
-    ON m.RoomID = r.RoomID
-ORDER BY m.RequestDate DESC;
 
 
--- QUERY 9: Maintenance workload handled by each staff member
--- Fixed so staff with zero requests do not appear to have one outstanding request
-
-SELECT
-    st.StaffID,
-    CONCAT(
-        st.First_Name,
-        ' ',
-        st.Last_Name
-    ) AS StaffName,
-    st.Email,
-
-    COUNT(
-        m.MaintenanceID
-    ) AS TotalRequests,
-
-    SUM(
-        CASE
-            WHEN m.Status = 'Resolved'
-                THEN 1
-            ELSE 0
-        END
-    ) AS ResolvedRequests,
-
-    SUM(
-        CASE
-            WHEN m.MaintenanceID IS NOT NULL
-                 AND m.Status <> 'Resolved'
-                THEN 1
-            ELSE 0
-        END
-    ) AS OutstandingRequests
-
-FROM Staff st
-
-LEFT JOIN Maintenance m
-    ON st.StaffID = m.StaffID
-
-GROUP BY
-    st.StaffID,
-    st.First_Name,
-    st.Last_Name,
-    st.Email
-
-ORDER BY
-    OutstandingRequests DESC,
-    TotalRequests DESC;
 
 
--- QUERY 10: Identify hostels with occupancy of at least 20%
--- Changed from >80% because the current dataset had no hostel above 80%
+DELIMITER //
 
-SELECT
-    h.HostelID,
-    h.HostelName,
-    SUM(r.Capacity) AS TotalCapacity,
-    SUM(r.CurrentOccupancy) AS OccupiedBeds,
-    ROUND(
-        SUM(r.CurrentOccupancy)
-        / NULLIF(SUM(r.Capacity), 0) * 100,
-        2
-    ) AS OccupancyPercentage
-FROM Hostel h
-JOIN Block b
-    ON h.HostelID = b.HostelID
-JOIN Room r
-    ON b.BlockID = r.BlockID
-GROUP BY
-    h.HostelID,
-    h.HostelName
-HAVING OccupancyPercentage >= 20
-ORDER BY OccupancyPercentage DESC;
+CREATE PROCEDURE sp_StudentAllocationReport(
+    IN p_StudentID VARCHAR(8)
+)
+BEGIN
+
+    SELECT
+        s.StudentID,
+        CONCAT(
+            s.FirstName,
+            ' ',
+            s.LastName
+        ) AS StudentName,
+        s.Programme,
+        s.Year,
+        h.HostelName,
+        b.BlockName,
+        r.RoomNumber,
+        bed.BedLabel,
+        sem.AcademicYear,
+        sem.SemesterName,
+        a.AllocationStartDate,
+        a.AllocationEndDate,
+        a.Status
+
+    FROM Student s
+
+    JOIN Allocation a
+        ON s.StudentID = a.StudentID
+
+    JOIN Bed bed
+        ON a.BedID = bed.BedID
+
+    JOIN Room r
+        ON bed.RoomID = r.RoomID
+
+    JOIN Block b
+        ON r.BlockID = b.BlockID
+
+    JOIN Hostel h
+        ON b.HostelID = h.HostelID
+
+    JOIN Semester sem
+        ON a.SemesterID = sem.SemesterID
+
+    WHERE
+        s.StudentID = p_StudentID
+
+    ORDER BY
+        a.AllocationStartDate DESC;
+
+END //
+
+DELIMITER ;
 
