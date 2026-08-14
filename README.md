@@ -55,10 +55,10 @@ How to create the database:
 1) Open MariaDB and log in:
 mariadb -u root -p
 
-2)Create the database:
+2) Create the database:
 CREATE DATABASE Hostel_Management;
 
-3)Select the database:
+3) Select the database:
 USE Hostel_Management;
 
 4) Run the provided SQL script to create the tables, constraints, and populate the database:
@@ -67,7 +67,7 @@ SOURCE path/to/hostel_management.sql;
 For example:
 SOURCE C:/Users/YourName/Documents/hostel_management.sql;
 
-5)Confirm that the tables were created:
+5) Confirm that the tables were created:
 SHOW TABLES;
 
 
@@ -75,13 +75,13 @@ SHOW TABLES;
 
 How to populate the database:
 
-1)Make sure the database has been created and selected:
+1) Make sure the database has been created and selected:
 USE Hostel_Management;
 
-2)Run the provided SQL file:
+2) Run the provided SQL file:
 SOURCE path/to/hostel_management.sql;
 
-3)Verify that data was inserted by running:
+3) Verify that data was inserted by running:
 SELECT * FROM Student;
 SELECT * FROM Hostel;
 SELECT * FROM Room;
@@ -91,13 +91,13 @@ SELECT * FROM Room;
 
 How to run the application:
 
-1)Open a terminal in the project folder.
+1) Open a terminal in the project folder.
 
-2)Make sure the MariaDB server is running and the Hostel_Management database has been created and populated.
+2) Make sure the MariaDB server is running and the Hostel_Management database has been created and populated.
 
-3)Make sure the database credentials in database.py are correct.
+3) Make sure the database credentials in database.py are correct.
 
-4)Start the Streamlit application:
+4) Start the Streamlit application:
 python -m streamlit run app.py
 
 The application should automatically open in your web browser. If it does not, copy the Local URL displayed in the terminal and open it in your browser.
