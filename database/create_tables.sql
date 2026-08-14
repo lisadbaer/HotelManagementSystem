@@ -1,8 +1,4 @@
 
-
-CREATE DATABASE Hostel_Management;
-USE Hostel_Management;
-
 CREATE TABLE Hostel (
     HostelID VARCHAR(10) PRIMARY KEY,
     HostelName VARCHAR(100) NOT NULL,

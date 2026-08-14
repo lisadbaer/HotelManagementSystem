@@ -38,6 +38,7 @@ cd <project-folder>
 python -m pip install streamlit mariadb
 
 3) Install MariaDB and start the MariaDB server.
+mariadb -u root -p Hostel_Management < database/seed.sql
 
 4) Create the database by running the provided SQL script in MariaDB.
 
